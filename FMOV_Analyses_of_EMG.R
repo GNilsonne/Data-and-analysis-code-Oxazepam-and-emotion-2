@@ -2,12 +2,12 @@
 # Gustav Nilsonne 2015-03-04
 
 # Require packages
-library(RCurl) # To read data from GitHub
+require(RCurl) # To read data from GitHub
 require(reshape2)
 require(RColorBrewer)
 require(nlme)
 require(effects)
-library(latticeExtra) # To make dotcharts
+require(latticeExtra) # To make dotcharts
 
 # Define colors for later
 col1 = brewer.pal(8, "Dark2")[1]
@@ -33,6 +33,9 @@ fun_readEMGdata <- function(X){
   } else if(length(data) == 9){
     names(data) <- c("SCR", "Raw_EMG_Zyg", "Raw_EMG_corr", "EMG_zyg", "EKG", "EMG_corr", "Angry", "Happy", "Neutral")
   }
+  
+  # Verify that data are reasonably orthogonal
+  plot(data$EMG_zyg ~ data$EMG_corr, frame.plot = F, main = X)
   
   # Find event onsets
   data$AngryDiff <- c(0, diff(data$Angry, lag = 1))
@@ -79,28 +82,43 @@ fun_readEMGdata <- function(X){
   }
   
   # Extract data, downsample
-  AngryEMG <- matrix(data$EMG_corr[data$AngryWindow == TRUE], ncol = length(AngryIndex))
-  AngryEMGlowess <- apply(AngryEMG, 2, lowess, f = 0.01)
-  AngryEMGlowess <- matrix(unlist(AngryEMGlowess), byrow = F, ncol = length(AngryEMGlowess))[802:1602, ]
+  AngryEMG_corr <- matrix(data$EMG_corr[data$AngryWindow == TRUE], ncol = length(AngryIndex))
+  AngryEMG_corrlowess <- apply(AngryEMG_corr, 2, lowess, f = 0.01)
+  AngryEMG_corrlowess <- matrix(unlist(AngryEMG_corrlowess), byrow = F, ncol = length(AngryEMG_corrlowess))[802:1602, ]
   
-  plot(AngryEMG[, 1], type = "l", col = "gray", frame.plot = F, main = X)
-  lines(AngryEMGlowess[, 1])
-  lines(y = AngryEMGlowess[, 1][seq(1, NROW(AngryEMGlowess[, 1]), by=10)], x = c(1:801)[seq(1, NROW(AngryEMGlowess[, 1]), by=10)], col = "red", type = "o")
+  plot(AngryEMG_corr[, 1], type = "l", col = "gray", frame.plot = F, main = X)
+  lines(AngryEMG_corrlowess[, 1])
+  lines(y = AngryEMG_corrlowess[, 1][seq(1, NROW(AngryEMG_corrlowess[, 1]), by=10)], x = c(1:801)[seq(1, NROW(AngryEMG_corrlowess[, 1]), by=10)], col = "red", type = "o")
   
-  AngryEMGdownsampled <- AngryEMG[seq(1, NROW(AngryEMGlowess), by=10), ]
+  AngryEMG_corrdownsampled <- AngryEMG_corr[seq(1, NROW(AngryEMG_corrlowess), by=10), ]
   
-  HappyEMG <- matrix(data$EMG_corr[data$HappyWindow == TRUE], ncol = length(HappyIndex))
-  HappyEMGlowess <- apply(HappyEMG, 2, lowess, f = 0.01)
-  HappyEMGlowess <- matrix(unlist(HappyEMGlowess), byrow = F, ncol = length(HappyEMGlowess))[802:1602, ]
-  HappyEMGdownsampled <- HappyEMG[seq(1, NROW(HappyEMGlowess), by=10), ]
+  AngryEMG_zyg <- matrix(data$EMG_zyg[data$AngryWindow == TRUE], ncol = length(AngryIndex))
+  AngryEMG_zyglowess <- apply(AngryEMG_zyg, 2, lowess, f = 0.01)
+  AngryEMG_zyglowess <- matrix(unlist(AngryEMG_zyglowess), byrow = F, ncol = length(AngryEMG_zyglowess))[802:1602, ]
+  AngryEMG_zygdownsampled <- AngryEMG_zyg[seq(1, NROW(AngryEMG_zyglowess), by=10), ]
   
-  NeutralEMG <- matrix(data$EMG_corr[data$NeutralWindow == TRUE], ncol = length(NeutralIndex))
-  NeutralEMGlowess <- apply(NeutralEMG, 2, lowess, f = 0.01)
-  NeutralEMGlowess <- matrix(unlist(NeutralEMGlowess), byrow = F, ncol = length(NeutralEMGlowess))[802:1602, ]
-  NeutralEMGdownsampled <- NeutralEMG[seq(1, NROW(NeutralEMGlowess), by=10), ]
+  HappyEMG_corr <- matrix(data$EMG_corr[data$HappyWindow == TRUE], ncol = length(HappyIndex))
+  HappyEMG_corrlowess <- apply(HappyEMG_corr, 2, lowess, f = 0.01)
+  HappyEMG_corrlowess <- matrix(unlist(HappyEMG_corrlowess), byrow = F, ncol = length(HappyEMG_corrlowess))[802:1602, ]
+  HappyEMG_corrdownsampled <- HappyEMG_corr[seq(1, NROW(HappyEMG_corrlowess), by=10), ]
+  
+  HappyEMG_zyg <- matrix(data$EMG_zyg[data$HappyWindow == TRUE], ncol = length(HappyIndex))
+  HappyEMG_zyglowess <- apply(HappyEMG_zyg, 2, lowess, f = 0.01)
+  HappyEMG_zyglowess <- matrix(unlist(HappyEMG_zyglowess), byrow = F, ncol = length(HappyEMG_zyglowess))[802:1602, ]
+  HappyEMG_zygdownsampled <- HappyEMG_zyg[seq(1, NROW(HappyEMG_zyglowess), by=10), ]
+  
+  NeutralEMG_corr <- matrix(data$EMG_corr[data$NeutralWindow == TRUE], ncol = length(NeutralIndex))
+  NeutralEMG_corrlowess <- apply(NeutralEMG_corr, 2, lowess, f = 0.01)
+  NeutralEMG_corrlowess <- matrix(unlist(NeutralEMG_corrlowess), byrow = F, ncol = length(NeutralEMG_corrlowess))[802:1602, ]
+  NeutralEMG_corrdownsampled <- NeutralEMG_corr[seq(1, NROW(NeutralEMG_corrlowess), by=10), ]
 
+  NeutralEMG_zyg <- matrix(data$EMG_zyg[data$NeutralWindow == TRUE], ncol = length(NeutralIndex))
+  NeutralEMG_zyglowess <- apply(NeutralEMG_zyg, 2, lowess, f = 0.01)
+  NeutralEMG_zyglowess <- matrix(unlist(NeutralEMG_zyglowess), byrow = F, ncol = length(NeutralEMG_zyglowess))[802:1602, ]
+  NeutralEMG_zygdownsampled <- NeutralEMG_zyg[seq(1, NROW(NeutralEMG_zyglowess), by=10), ]
+  
   # Make a list for each participant and return it as output
-  EMGData <- list(as.integer(X), AngryEMGdownsampled, HappyEMGdownsampled, NeutralEMGdownsampled)
+  EMGData <- list(as.integer(X), AngryEMG_zygdownsampled, AngryEMG_corrdownsampled, HappyEMG_zygdownsampled, HappyEMG_corrdownsampled, NeutralEMG_zygdownsampled, NeutralEMG_corrdownsampled)
   return(EMGData)
 }
 
@@ -109,108 +127,104 @@ fun_readEMGdata <- function(X){
 demDataURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analysis-code-Oxazepam-and-emotion/master/demographics.csv", ssl.verifypeer = FALSE)
 demData <- read.csv(text = demDataURL)
 # Then the Acqknowledge logfiles containing EMG data
-IncludedSubjects <- c(9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20) #demData$Subject[demData$Included_EP == T]
+IncludedSubjects <- c(9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47) #demData$Subject[demData$Included_EP == T]
 EMGDataList <- lapply(IncludedSubjects, FUN = fun_readEMGdata)
 
 # Move all data to one big frame
-EMGData <- data.frame()
+EMG_corr <- data.frame()
 
 for(i in 1:length(EMGDataList)){
   if(!is.null(EMGDataList[i][[1]])){
-    AngryData <- melt(EMGDataList[i][[1]][[2]], na.rm = F)
-    names(AngryData) <- c("time_0.1s", "event_no", "EMG_corr")
-    AngryData$Stimulus <- "Angry"
+    Angry_corr <- melt(EMGDataList[i][[1]][[3]], na.rm = F)
+    names(Angry_corr) <- c("time_0.1s", "event_no", "EMG_corr")
+    Angry_corr$Stimulus <- "Angry"
     
-    HappyData <- melt(EMGDataList[i][[1]][[3]], na.rm = F)
-    names(HappyData) <- c("time_0.1s", "event_no", "EMG_corr")
-    HappyData$Stimulus <- "Happy"
+    Happy_corr <- melt(EMGDataList[i][[1]][[5]], na.rm = F)
+    names(Happy_corr) <- c("time_0.1s", "event_no", "EMG_corr")
+    Happy_corr$Stimulus <- "Happy"
     
-    NeutralData <- melt(EMGDataList[i][[1]][[4]], na.rm = F)
-    names(NeutralData) <- c("time_0.1s", "event_no", "EMG_corr")
-    NeutralData$Stimulus <- "Neutral"
+    Neutral_corr <- melt(EMGDataList[i][[1]][[7]], na.rm = F)
+    names(Neutral_corr) <- c("time_0.1s", "event_no", "EMG_corr")
+    Neutral_corr$Stimulus <- "Neutral"
     
-    EMGData_temp <- rbind(AngryData, HappyData, NeutralData)
-    EMGData_temp$subject <- IncludedSubjects[i]
+    EMG_corr_temp <- rbind(Angry_corr, Happy_corr, Neutral_corr)
+    EMG_corr_temp$subject <- IncludedSubjects[i]
   }
-  EMGData <- rbind(EMGData, EMGData_temp)
+  EMG_corr <- rbind(EMG_corr, EMG_corr_temp)
 }
-
-# Check how many data points have been removed
-num_na <- sum(is.na(EMGData$EMG_corr))
-frac_na <- num_na/length(EMGData$EMG_corr)
 
 # Convert time scale and set 0 to event onset
-EMGData$time_s <- EMGData$time_0.1s/10
-EMGData$time_s <- EMGData$time_s -2
+EMG_corr$time_s <- EMG_corr$time_0.1s/10
+EMG_corr$time_s <- EMG_corr$time_s -2
   
 # Make spaghetti plots
-plot(EMG_corr ~ time_s, data = subset(EMGData, Stimulus == "Angry"), frame.plot = F, type = 'n', main = "Angry", ylim = c(0, 0.001))
-for(i in unique(EMGData$subject)){
-  for( j in unique(EMGData$event_no[EMGData$subject == i])){
-    lines(EMG_corr ~ time_s, data = EMGData[EMGData$subject == i & EMGData$event_no == j & EMGData$Stimulus == "Angry", ], col = col4)
-  }
-}
-  
-plot(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Self" & Stimulus == "Low"), frame.plot = F, type = 'n', main = "Self low", ylim = c(0, 0.04))
-for(i in unique(EMGData$subject)){
-  for( j in unique(EMGData$event_no[EMGData$subject == i])){
-    lines(EMG_corr ~ time_s, data = EMGData[EMGData$subject == i & EMGData$event_no == j & EMGData$Condition == "Self" & EMGData$Stimulus == "Low", ], col = col7)
+plot(EMG_corr ~ time_s, data = subset(EMG_corr, Stimulus == "Angry"), frame.plot = F, type = 'n', main = "Angry", ylim = c(0, 0.004))
+for(i in unique(EMG_corr$subject)){
+  for( j in unique(EMG_corr$event_no[EMG_corr$subject == i])){
+    lines(EMG_corr ~ time_s, data = EMG_corr[EMG_corr$subject == i & EMG_corr$event_no == j & EMG_corr$Stimulus == "Angry", ], col = col4)
   }
 }
 
-plot(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Other" & Stimulus == "High"), frame.plot = F, type = 'n', main = "Other high", ylim = c(0, 0.04))
-for(i in unique(EMGData$subject)){
-  for( j in unique(EMGData$event_no[EMGData$subject == i])){
-    lines(EMG_corr ~ time_s, data = EMGData[EMGData$subject == i & EMGData$event_no == j & EMGData$Condition == "Other" & EMGData$Stimulus == "High", ], col = col4)
+plot(EMG_corr ~ time_s, data = subset(EMG_corr, Stimulus == "Happy"), frame.plot = F, type = 'n', main = "Happy", ylim = c(0, 0.004))
+for(i in unique(EMG_corr$subject)){
+  for( j in unique(EMG_corr$event_no[EMG_corr$subject == i])){
+    lines(EMG_corr ~ time_s, data = EMG_corr[EMG_corr$subject == i & EMG_corr$event_no == j & EMG_corr$Stimulus == "Happy", ], col = col7)
   }
 }
 
-plot(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Other" & Stimulus == "Low"), frame.plot = F, type = 'n', main = "Other low", ylim = c(0, 0.04))
-for(i in unique(EMGData$subject)){
-  for( j in unique(EMGData$event_no[EMGData$subject == i])){
-    lines(EMG_corr ~ time_s, data = EMGData[EMGData$subject == i & EMGData$event_no == j & EMGData$Condition == "Other" & EMGData$Stimulus == "Low", ], col = col7)
+# Since data have varying baselines between conditions, we index each response to its baseline from -2 to 0 seconds
+EMG_corr$EMG_corr_index <- NA
+for(i in unique(EMG_corr$subject)){
+  for(j in unique(EMG_corr$event_no[EMG_corr$subject == i])){
+    for(k in c("Angry", "Happy", "Neutral")){
+      EMG_corr$EMG_corr_index[EMG_corr$subject == i & EMG_corr$event_no == j & EMG_corr$Stimulus == k] <- EMG_corr$EMG_corr[EMG_corr$subject == i & EMG_corr$event_no == j & EMG_corr$Stimulus == k]/mean(EMG_corr$EMG_corr[EMG_corr$subject == i & EMG_corr$event_no == j & EMG_corr$Stimulus == k][1:20])
+    }
   }
 }
 
-MeanEMGAngry <- aggregate(EMG_corr ~ time_s, data = subset(EMGData, Stimulus == "Angry"), mean)
-MeanEMGSelfLow <- aggregate(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Self" & Stimulus == "Low"), mean)
-MeanEMGOtherHigh <- aggregate(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Other" & Stimulus == "High"), mean)
-MeanEMGOtherLow <- aggregate(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Other" & Stimulus == "Low"), mean)
+# Make spaghetti plots of normalised data
+plot(EMG_corr_index ~ time_s, data = subset(EMG_corr, Stimulus == "Angry"), frame.plot = F, type = 'n', main = "Angry", ylim = c(0, 15))
+for(i in unique(EMG_corr$subject)){
+  for(j in unique(EMG_corr$event_no[EMG_corr$subject == i])){
+    lines(EMG_corr_index ~ time_s, data = EMG_corr[EMG_corr$subject == i & EMG_corr$event_no == j & EMG_corr$Stimulus == "Angry", ], col = col4)
+  }
+}
 
-MeanEMGSelfHighWave1 <- aggregate(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Self" & Stimulus == "High" & subject %in% demData$Subject[demData$Wave == 1]), mean)
-MeanEMGSelfLowWave1 <- aggregate(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Self" & Stimulus == "Low" & subject %in% demData$Subject[demData$Wave == 1]), mean)
-MeanEMGOtherHighWave1 <- aggregate(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Other" & Stimulus == "High" & subject %in% demData$Subject[demData$Wave == 1]), mean)
-MeanEMGOtherLowWave1 <- aggregate(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Other" & Stimulus == "Low" & subject %in% demData$Subject[demData$Wave == 1]), mean)
+plot(EMG_corr_index ~ time_s, data = subset(EMG_corr, Stimulus == "Happy"), frame.plot = F, type = 'n', main = "Happy", ylim = c(0, 15))
+for(i in unique(EMG_corr$subject)){
+  for(j in unique(EMG_corr$event_no[EMG_corr$subject == i])){
+    lines(EMG_corr_index ~ time_s, data = EMG_corr[EMG_corr$subject == i & EMG_corr$event_no == j & EMG_corr$Stimulus == "Happy", ], col = col7)
+  }
+}
 
-MeanEMGSelfHighWave2 <- aggregate(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Self" & Stimulus == "High" & subject %in% demData$Subject[demData$Wave == 2]), mean)
-MeanEMGSelfLowWave2 <- aggregate(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Self" & Stimulus == "Low" & subject %in% demData$Subject[demData$Wave == 2]), mean)
-MeanEMGOtherHighWave2 <- aggregate(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Other" & Stimulus == "High" & subject %in% demData$Subject[demData$Wave == 2]), mean)
-MeanEMGOtherLowWave2 <- aggregate(EMG_corr ~ time_s, data = subset(EMGData, Condition == "Other" & Stimulus == "Low" & subject %in% demData$Subject[demData$Wave == 2]), mean)
+plot(EMG_corr_index ~ time_s, data = subset(EMG_corr, Stimulus == "Neutral"), frame.plot = F, type = 'n', main = "Neutral", ylim = c(0, 15))
+for(i in unique(EMG_corr$subject)){
+  for(j in unique(EMG_corr$event_no[EMG_corr$subject == i])){
+    lines(EMG_corr_index ~ time_s, data = EMG_corr[EMG_corr$subject == i & EMG_corr$event_no == j & EMG_corr$Stimulus == "Neutral", ], col = col8)
+  }
+}
 
-plot(MeanEMGAngry, type = "l", col = col4, frame.plot = F, main = "Corrugator EMG, Angry") #, ylim = c(0.0002, 0.0011))
-lines(MeanEMGAngry, col = col7)
-#legend("topleft", lty = 1, col = c(col4, col7), legend = c("High", "Low"), bty = "n")
-#abline(v = c(0, 0.5), lty = 2)
 
-plot(MeanEMGSelfHighWave1, type = "l", col = col4, frame.plot = F, main = "Corrugator EMG, self condition, Wave 1", ylim = c(0.0002, 0.0011))
-lines(MeanEMGSelfLowWave1, col = col7)
-legend("topleft", lty = 1, col = c(col4, col7), legend = c("High", "Low"), bty = "n")
-abline(v = c(0, 3, 4), lty = 2)
 
-plot(MeanEMGOtherHighWave1, type = "l", col = col4, frame.plot = F, main = "Corrugator EMG, other condition, Wave 1", ylim = c(0.0002, 0.0011))
-lines(MeanEMGOtherLowWave1, col = col7)
-legend("topleft", lty = 1, col = c(col4, col7), legend = c("High", "Low"), bty = "n")
-abline(v = c(0, 3, 4), lty = 2)
+MeanEMGCorrAngry <- aggregate(EMG_corr_index ~ time_s, data = subset(EMG_corr, Stimulus == "Angry"), mean)
+MeanEMGCorrHappy <- aggregate(EMG_corr_index ~ time_s, data = subset(EMG_corr, Stimulus == "Happy"), mean)
+MeanEMGCorrNeutral <- aggregate(EMG_corr_index ~ time_s, data = subset(EMG_corr, Stimulus == "Neutral"), mean)
 
-plot(MeanEMGSelfHighWave2, type = "l", col = col4, frame.plot = F, main = "Corrugator EMG, self condition, Wave 2", ylim = c(0.0002, 0.0011))
-lines(MeanEMGSelfLowWave2, col = col7)
-legend("topleft", lty = 1, col = c(col4, col7), legend = c("High", "Low"), bty = "n")
-abline(v = c(0, 0.5), lty = 2)
 
-plot(MeanEMGOtherHighWave2, type = "l", col = col4, frame.plot = F, main = "Corrugator EMG, other condition, Wave 2", ylim = c(0.0002, 0.0011))
-lines(MeanEMGOtherLowWave2, col = col7)
-legend("topleft", lty = 1, col = c(col4, col7), legend = c("High", "Low"), bty = "n")
-abline(v = c(0, 0.5), lty = 2)
+
+plot(MeanEMGCorrAngry, type = "l", col = col4, frame.plot = F, main = "Corrugator EMG", ylim = c(0.7, 1.3))
+lines(MeanEMGCorrHappy, col = col7)
+lines(MeanEMGCorrNeutral, col = col8)
+legend("topleft", lty = 1, col = c(col4, col7, col8), legend = c("Angry", "Happy", "Neutral"), bty = "n")
+abline(v = c(0), lty = 2)
+
+plot(MeanEMGCorrAngry, type = "n", col = col4, frame.plot = F, main = "Corrugator EMG", ylim = c(0.8, 1.2))
+lines(lowess(MeanEMGCorrAngry, f = 0.1), col = col4)
+lines(lowess(MeanEMGCorrHappy, f = 0.1), col = col7)
+lines(lowess(MeanEMGCorrNeutral, f = 0.1), col = col8)
+legend("topleft", lty = 1, col = c(col4, col7, col8), legend = c("Angry", "Happy", "Neutral"), bty = "n")
+abline(v = c(0), lty = 2)
+
 
 # Make figures
 pdf("Fig_EMG1.pdf", width = 4, height = 4)
@@ -254,91 +268,39 @@ lines(MeanEMGOtherHighWave2, col = col4, lwd = 2)
 lines(MeanEMGOtherLowWave2, col = col7, lty = 5, lwd = 2)
 dev.off()
 
-
-# Since data have varying baselines between conditions, we index each response to its baseline from -2 to 0 seconds
-#EMGData$hr_index <- NA
-#for(i in unique(EMGData$subject)){
-#  for(j in unique(EMGData$event_no[EMGData$subject == i])){
-#    for(k in c("Self", "Other")){
-#      for(l in c("High", "Low")){
-#        EMGData$hr_index[EMGData$subject == i & EMGData$event_no == j & EMGData$Condition == k & EMGData$Stimulus == l] <- EMGData$hr_bpm[EMGData$subject == i & EMGData$event_no == j & EMGData$Condition == k & EMGData$Stimulus == l]/mean(EMGData$hr_bpm[EMGData$subject == i & EMGData$event_no == j & EMGData$Condition == k & EMGData$Stimulus == l][1:20])
-#      }
-#    }
-#  }
-#}
-
-#MeanHRIndexSelfHigh <- aggregate(hr_index ~ time_s, data = subset(EMGData, Condition == "Self" & Stimulus == "High"), mean)
-#MeanHRIndexSelfLow <- aggregate(hr_index ~ time_s, data = subset(EMGData, Condition == "Self" & Stimulus == "Low"), mean)
-#MeanHRIndexOtherHigh <- aggregate(hr_index ~ time_s, data = subset(EMGData, Condition == "Other" & Stimulus == "High"), mean)
-#MeanHRIndexOtherLow <- aggregate(hr_index ~ time_s, data = subset(EMGData, Condition == "Other" & Stimulus == "Low"), mean)
-
-#pdf("Fig_HR1.pdf", width = 4, height = 4)
-#plot(MeanHRIndexSelfHigh, type = "n", col = col4, frame.plot = F, main = "I. Heart rate, Self", ylim = c(0.98, 1.16), xlab = "Time, s", ylab = "Heart rate, normalised ratio", xaxt = "n")
-#abline(v = c(0, 0.5), lty = 3)
-#rect(2.5, 0, 5, 1.16, col = "gray88", border = NA)
-#axis(1)
-#lines(MeanHRIndexSelfHigh, col = col4, lwd = 2)
-#lines(MeanHRIndexSelfLow, col = col7, lty = 5, lwd = 2)
-#legend("topright", lty = c(1, 5), lwd = 2, col = c(col4, col7), legend = c("High", "Low"), bg = "white")
-#dev.off()
-
-#pdf("Fig_HR2.pdf", width = 4, height = 4)
-#plot(MeanHRIndexOtherHigh, type = "n", col = col4, frame.plot = F, main = "J. Heart rate, Other", ylim = c(0.98, 1.16), xlab = "Time, s", ylab = "Heart rate, normalised ratio")
-#abline(v = c(0, 0.5), lty = 3)
-#rect(2.5, 0, 5, 1.16, col = "gray88", border = NA)
-#lines(MeanHRIndexOtherHigh, col = col4, lwd = 2)
-#lines(MeanHRIndexOtherLow, col = col7, lty = 5, lwd = 2)
-#dev.off()
-
 # Average data over interval for each event for statistical modelling
 EMGEventData <- data.frame()
-for(i in unique(EMGData$subject)){
-  for(j in unique(EMGData$event_no[EMGData$subject == i])){
-    for(k in c("Self", "Other")){
-      for(l in c("High", "Low")){
+for(i in unique(EMG_corr$subject)){
+  for(j in unique(EMG_corr$event_no[EMG_corr$subject == i])){
+    for(k in c("Angry", "Happy", "Neutral")){
         if(i %in% demData$Subject[demData$Wave == 1]){
-          EMG_corr_mean <- mean(EMGData$EMG_corr[EMGData$subject == i & EMGData$event_no == j & EMGData$Condition == k & EMGData$Stimulus == l][50:70])
-          EMGEventData <- rbind(EMGEventData, data.frame(i, j, k, l, EMG_corr_mean))
-        } else if(i %in% demData$Subject[demData$Wave == 2]){
-          EMG_corr_mean <- mean(EMGData$EMG_corr[EMGData$subject == i & EMGData$event_no == j & EMGData$Condition == k & EMGData$Stimulus == l][20:40])
-          EMGEventData <- rbind(EMGEventData, data.frame(i, j, k, l, EMG_corr_mean))
-        }
-      }
+          EMG_corr_mean <- mean(EMG_corr$EMG_corr_index[EMG_corr$subject == i & EMG_corr$event_no == j & EMG_corr$Stimulus == k][40:70])
+          EMGEventData <- rbind(EMGEventData, data.frame(i, j, k, EMG_corr_mean))
+        } #else if(i %in% demData$Subject[demData$Wave == 2]){
+          #EMG_corr_mean <- mean(EMGData$EMG_corr[EMGData$subject == i & EMGData$event_no == j & EMGData$Stimulus == k][20:40])
+          #EMGEventData <- rbind(EMGEventData, data.frame(i, j, k, EMG_corr_mean))
+      #}
     }
   }
 }
-names(EMGEventData) <- c("Subject", "event_no", "Condition", "Stimulus", "EMG_corr_mean")
+names(EMGEventData) <- c("Subject", "event_no", "Stimulus", "EMG_corr_mean")
+
+hist(EMGEventData$EMG_corr_mean)
+hist(log(EMGEventData$EMG_corr_mean))
 
 EMGEventData$EMG_corr_mean <- log(EMGEventData$EMG_corr_mean)
 
 # Analyse data
-# Include IRI-EC terms in model since we wish to control for baseline empathic propensity 
 EMGEventData <- merge(EMGEventData, demData, by = "Subject")
 
-# Make a new column to specify an "Other High" contrast in modelling
-EMGEventData$Condition <- ordered(EMGEventData$Condition, levels = c("Other", "Self"))
-
-EMGEventData$OtherHigh <- as.numeric(EMGEventData$Condition)*as.numeric(EMGEventData$Stimulus)
-EMGEventData$OtherHigh[EMGEventData$OtherHigh == 1] <- 1
-EMGEventData$OtherHigh[EMGEventData$OtherHigh != 1] <- 0
-
-# z-transform IRI-EC
-EMGEventData$IRI_EC_z <- scale(EMGEventData$IRI_EC)
-
-# Make a regressor for predictor in other high condition only
-EMGEventData$IRI_EC_z_OtherHigh <- EMGEventData$IRI_EC_z * EMGEventData$OtherHigh
-
-# Mean center the new regressor
-EMGEventData$IRI_EC_z_OtherHigh[EMGEventData$IRI_EC_z_OtherHigh > 0 & !is.na(EMGEventData$IRI_EC_z_OtherHigh)] <- EMGEventData$IRI_EC_z_OtherHigh[EMGEventData$IRI_EC_z_OtherHigh > 0 & !is.na(EMGEventData$IRI_EC_z_OtherHigh)] - mean(EMGEventData$IRI_EC_z_OtherHigh[EMGEventData$IRI_EC_z_OtherHigh > 0 & !is.na(EMGEventData$IRI_EC_z_OtherHigh)], na.rm = TRUE)
-
 # Build model
-lme1 <- lme(EMG_corr_mean ~ Treatment*Stimulus*Condition + IRI_EC_z + IRI_EC_z_OtherHigh + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
+lme1 <- lme(EMG_corr_mean ~ Treatment*Stimulus, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
 
 plot(lme1)
 summary(lme1)
 intervals(lme1)
 
-eff1 <- effect("Treatment*Stimulus*Condition", lme1)
+eff1 <- effect("Treatment*Stimulus", lme1)
 
 pdf("Fig_EMG5.pdf", width = 4, height = 4)
 plot(c(eff1$fit[6], eff1$fit[8]),
@@ -386,9 +348,7 @@ axis(2, at = c(-8.7, -8.2, -7.7))
 dev.off()
 
 # Compare plots to less custom-generated output for verification
-plot(effect("Treatment*Stimulus*Condition", lme1))
-plot(effect("Stimulus*Condition", lme1))
-plot(effect("IRI_EC_z_OtherHigh", lme1))
+plot(effect("Treatment*Stimulus", lme1))
 
 # Analyse other rating scales as predictors
 # Since rating scales may be collinear, we include them one by one
