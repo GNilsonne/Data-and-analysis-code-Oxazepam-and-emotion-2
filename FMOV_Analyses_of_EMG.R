@@ -109,7 +109,7 @@ fun_readEMGdata <- function(X){
 demDataURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analysis-code-Oxazepam-and-emotion/master/demographics.csv", ssl.verifypeer = FALSE)
 demData <- read.csv(text = demDataURL)
 # Then the Acqknowledge logfiles containing EMG data
-IncludedSubjects <- c(9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20) #demData$Subject[demData$Included_EP == T]
+IncludedSubjects <- demData$Subject[demData$Included_FMOV == T]
 EMGDataList <- lapply(IncludedSubjects, FUN = fun_readEMGdata)
 
 # Move all data to one big frame
