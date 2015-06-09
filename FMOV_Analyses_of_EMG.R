@@ -1,7 +1,5 @@
 # Script to analyse EMG in the FMOV experiment of the Oxazepam project 2011
-# Gustav Nilsonne 2015-03-04
-
-# Works up to and including participant 85
+# Gustav Nilsonne 2015-06-08
 
 # Require packages
 require(RCurl) # To read data from GitHub
@@ -210,8 +208,6 @@ for(i in unique(EMG_corr$subject)){
   }
 }
 
-
-
 MeanEMGCorrAngry <- aggregate(EMG_corr_index ~ time_s, data = subset(EMG_corr, Stimulus == "Angry"), mean)
 MeanEMGCorrHappy <- aggregate(EMG_corr_index ~ time_s, data = subset(EMG_corr, Stimulus == "Happy"), mean)
 MeanEMGCorrNeutral <- aggregate(EMG_corr_index ~ time_s, data = subset(EMG_corr, Stimulus == "Neutral"), mean)
@@ -240,27 +236,27 @@ abline(v = c(0), lty = 2)
 
 
 # Make figures
-pdf("Fig_EMG1.pdf", width = 4, height = 4)
+pdf("Fig_EMG1.pdf", width = 7, height = 5)
 plot(MeanEMGCorrAngryWave1, type = "n", col = col4, frame.plot = F, main = "Corrugator EMG, Wave 1", xlab = "Time (s)", ylab = "EMG (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.8, 1.3))
 rect(2, 0.000001, 4, 10, col = "gray88", border = NA)
 abline(v = c(0, 2, 5), lty = 3)
 axis(1)
 axis(2, at = c(0.8, 1, 1.2))
-lines(MeanEMGCorrAngryWave1, col = col4, lwd = 2)
-lines(MeanEMGCorrHappyWave1, col = col7, lwd = 2)
-lines(MeanEMGCorrNeutralWave1, col = col8, lwd = 2)
-legend("topleft", lty = 1, col = c(col4, col7, col8), legend = c("Angry", "Happy", "Neutral"), bty = "n", lwd = 2)
+lines(lowess(MeanEMGCorrAngryWave1, f = 0.1), col = col4, lwd = 2)
+lines(lowess(MeanEMGCorrHappyWave1, f = 0.1), col = col7, lwd = 2)
+lines(lowess(MeanEMGCorrNeutralWave1, f= 0.1), col = col8, lwd = 2)
+legend("topleft", lty = 1, col = c(col4, col7, col8), legend = c("Angry", "Happy", "Neutral"), lwd = 2, bty = "n")
 dev.off()
 
-pdf("Fig_EMG3.pdf", width = 4, height = 4)
+pdf("Fig_EMG2.pdf", width = 7, height = 5)
 plot(MeanEMGCorrAngryWave2, type = "n", col = col4, frame.plot = F, main = "Corrugator EMG, Wave 2", xlab = "Time (s)", ylab = "EMG (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.8, 1.3))
 rect(2, 0.000001, 4, 10, col = "gray88", border = NA)
 abline(v = c(0, 2, 4), lty = 3)
 axis(1)
 axis(2, at = c(0.8, 1, 1.2))
-lines(MeanEMGCorrAngryWave2, col = col4, lwd = 2)
-lines(MeanEMGCorrHappyWave2, col = col7, lwd = 2)
-lines(MeanEMGCorrNeutralWave2, col = col8, lwd = 2)
+lines(lowess(MeanEMGCorrAngryWave2, f = 0.1), col = col4, lwd = 2)
+lines(lowess(MeanEMGCorrHappyWave2, f = 0.1), col = col7, lwd = 2)
+lines(lowess(MeanEMGCorrNeutralWave2, f = 0.1), col = col8, lwd = 2)
 dev.off()
 
 # Average data over interval for each event for statistical modelling
@@ -287,45 +283,47 @@ EMGEventData$EMG_corr_mean <- log(EMGEventData$EMG_corr_mean)
 
 # Analyse data
 EMGEventData <- merge(EMGEventData, demData, by = "Subject")
-EMGEventData$Stimulus <- ordered(EMGEventData$Stimulus, levels = c("Angry", "Neutral", "Happy"))
+EMGEventData$Subject <- as.factor(EMGEventData$Subject)
+EMGEventData$Stimulus <- relevel(EMGEventData$Stimulus, ref = "Neutral")
+EMGEventData$Treatment <- relevel(EMGEventData$Treatment, ref = "Placebo")
 EMGEventData$IRI_EC_z <- scale(EMGEventData$IRI_EC)
 
 # Build model
-lme1 <- lme(EMG_corr_mean ~ Treatment*Stimulus + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
-lme2 <- lme(EMG_corr_mean ~ Treatment*Stimulus + Wave + IRI_EC_z, data = subset(EMGEventData, Stimulus %in% c("Angry", "Neutral")), random = ~1|Subject, na.action = na.omit)
+lme1 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
+lme1b <- lme(EMG_corr_mean ~ Stimulus*Treatment + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
+
+#lme1c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = subset(EMGEventData, Stimulus %in% c("Angry", "Neutral")), random = ~1|Subject, na.action = na.omit)
 
 plot(lme1)
 summary(lme1)
 intervals(lme1)
 
-eff1 <- effect("Treatment*Stimulus", lme1)
-eff2 <- effect("Treatment*Stimulus", lme2)
+eff1 <- effect("Stimulus*Treatment", lme1)
 
 # Compare plots to less custom-generated output for verification
 plot(effect("Treatment*Stimulus", lme1))
-plot(effect("Treatment*Stimulus", lme2))
 
-pdf("Fig_EMG5.pdf", width = 4, height = 4)
-plot(c(eff1$fit[2], eff1$fit[4], eff1$fit[6]),
+pdf("Fig_EMG3.pdf", width = 7, height = 5)
+plot(c(eff1$fit[1], eff1$fit[2], eff1$fit[3]),
      type = "b",
      frame.plot = F,
-     ylab = "EMG (ratio)",
+     ylab = "EMG (log ratio)",
      xlab = "Stimulus type",
      xaxt = "n",
      yaxt = "n",
      xlim = c(1, 3.1),
      ylim = c(-0.2, 0.1),
      col = col1,
-     main = "Corrugator EMG"
+     main = "Corrugator EMG",
 )
-lines(c(1, 1), c(eff1$upper[2], eff1$lower[2]), col = col1)
-lines(c(2, 2), c(eff1$upper[4], eff1$lower[4]), col = col1)
-lines(c(3, 3), c(eff1$upper[6], eff1$lower[6]), col = col1)
-lines(c(1.1, 2.1, 3.1), c(eff1$fit[1], eff1$fit[3], eff1$fit[5]), type = "b", col = col2, pch = 16)
-lines(c(1.1, 1.1), c(eff1$upper[1], eff1$lower[1]), col = col2)
-lines(c(2.1, 2.1), c(eff1$upper[3], eff1$lower[3]), col = col2)
-lines(c(3.1, 3.1), c(eff1$upper[5], eff1$lower[5]), col = col2)
-axis(1, at = c(1.05, 2.05, 3.05), labels = c("Angry", "Neutral", "Happy"))
+lines(c(1, 1), c(eff1$upper[1], eff1$lower[1]), col = col1)
+lines(c(2, 2), c(eff1$upper[2], eff1$lower[2]), col = col1)
+lines(c(3, 3), c(eff1$upper[3], eff1$lower[3]), col = col1)
+lines(c(1.1, 2.1, 3.1), c(eff1$fit[4], eff1$fit[5], eff1$fit[6]), type = "b", col = col2, pch = 16)
+lines(c(1.1, 1.1), c(eff1$upper[4], eff1$lower[4]), col = col2)
+lines(c(2.1, 2.1), c(eff1$upper[5], eff1$lower[5]), col = col2)
+lines(c(3.1, 3.1), c(eff1$upper[6], eff1$lower[6]), col = col2)
+axis(1, at = c(1.05, 2.05, 3.05), labels = c("Neutral", "Angry", "Happy"))
 axis(2, at = c(-0.2, -0.1, 0, 0.1))
 legend("topright", col = c(col1, col2), pch = c(1, 16), legend = c("Placebo", "Oxazepam"), bty = "n", lty = 1)
 dev.off()
@@ -333,50 +331,37 @@ dev.off()
 # Analyse other rating scales as predictors
 # Since rating scales may be collinear, we include them one by one
 
-# IRI-EC
-EMGEventData$IRI_EC_z <- scale(EMGEventData$IRI_EC)
-
 # IRI-PT
 EMGEventData$IRI_PT_z <- scale(EMGEventData$IRI_PT)
-EMGEventData$IRI_PT_z_OtherHigh <- EMGEventData$IRI_PT_z * EMGEventData$OtherHigh
-EMGEventData$IRI_PT_z_OtherHigh[EMGEventData$IRI_PT_z_OtherHigh > 0 & !is.na(EMGEventData$IRI_PT_z_OtherHigh)] <- EMGEventData$IRI_PT_z_OtherHigh[EMGEventData$IRI_PT_z_OtherHigh > 0 & !is.na(EMGEventData$IRI_PT_z_OtherHigh)] - mean(EMGEventData$IRI_PT_z_OtherHigh[EMGEventData$IRI_PT_z_OtherHigh > 0 & !is.na(EMGEventData$IRI_PT_z_OtherHigh)], na.rm = TRUE)
-lme2 <- lme(EMG_corr_mean ~ Treatment*Stimulus*Condition + IRI_PT_z + IRI_PT_z_OtherHigh + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
+lme2 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_PT_z) + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
 plot(lme2)
 summary(lme2)
 intervals(lme2)
 
 # IRI-PD
 EMGEventData$IRI_PD_z <- scale(EMGEventData$IRI_PD)
-EMGEventData$IRI_PD_z_OtherHigh <- EMGEventData$IRI_PD_z * EMGEventData$OtherHigh
-EMGEventData$IRI_PD_z_OtherHigh[EMGEventData$IRI_PD_z_OtherHigh > 0 & !is.na(EMGEventData$IRI_PD_z_OtherHigh)] <- EMGEventData$IRI_PD_z_OtherHigh[EMGEventData$IRI_PD_z_OtherHigh > 0 & !is.na(EMGEventData$IRI_PD_z_OtherHigh)] - mean(EMGEventData$IRI_PD_z_OtherHigh[EMGEventData$IRI_PD_z_OtherHigh > 0 & !is.na(EMGEventData$IRI_PD_z_OtherHigh)], na.rm = TRUE)
-lme3 <- lme(EMG_corr_mean ~ Treatment*Stimulus*Condition + IRI_PD_z + IRI_PD_z_OtherHigh + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
+lme3 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_PD_z) + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
 plot(lme3)
 summary(lme3)
 intervals(lme3)
 
 # IRI-F
 EMGEventData$IRI_F_z <- scale(EMGEventData$IRI_F)
-EMGEventData$IRI_F_z_OtherHigh <- EMGEventData$IRI_F_z * EMGEventData$OtherHigh
-EMGEventData$IRI_F_z_OtherHigh[EMGEventData$IRI_F_z_OtherHigh > 0 & !is.na(EMGEventData$IRI_F_z_OtherHigh)] <- EMGEventData$IRI_F_z_OtherHigh[EMGEventData$IRI_F_z_OtherHigh > 0 & !is.na(EMGEventData$IRI_F_z_OtherHigh)] - mean(EMGEventData$IRI_F_z_OtherHigh[EMGEventData$IRI_F_z_OtherHigh > 0 & !is.na(EMGEventData$IRI_F_z_OtherHigh)], na.rm = TRUE)
-lme4 <- lme(EMG_corr_mean ~ Treatment*Stimulus*Condition + IRI_F_z + IRI_F_z_OtherHigh + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
+lme4 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_F_z) + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
 plot(lme4)
 summary(lme4)
 intervals(lme4)
 
 # STAI-T
 EMGEventData$STAI.T_z <- scale(EMGEventData$STAI.T)
-EMGEventData$STAI.T_z_OtherHigh <- EMGEventData$STAI.T_z * EMGEventData$OtherHigh
-EMGEventData$STAI.T_z_OtherHigh[EMGEventData$STAI.T_z_OtherHigh > 0 & !is.na(EMGEventData$STAI.T_z_OtherHigh)] <- EMGEventData$STAI.T_z_OtherHigh[EMGEventData$STAI.T_z_OtherHigh > 0 & !is.na(EMGEventData$STAI.T_z_OtherHigh)] - mean(EMGEventData$STAI.T_z_OtherHigh[EMGEventData$STAI.T_z_OtherHigh > 0 & !is.na(EMGEventData$STAI.T_z_OtherHigh)], na.rm = TRUE)
-lme5 <- lme(EMG_corr_mean ~ Treatment*Stimulus*Condition + STAI.T_z + STAI.T_z_OtherHigh + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
+lme5 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + STAI.T_z) + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
 plot(lme5)
 summary(lme5)
 intervals(lme5)
 
 # TAS-20
 EMGEventData$TAS.20_z <- scale(EMGEventData$TAS.20)
-EMGEventData$TAS.20_z_OtherHigh <- EMGEventData$TAS.20_z * EMGEventData$OtherHigh
-EMGEventData$TAS.20_z_OtherHigh[EMGEventData$TAS.20_z_OtherHigh > 0 & !is.na(EMGEventData$TAS.20_z_OtherHigh)] <- EMGEventData$TAS.20_z_OtherHigh[EMGEventData$TAS.20_z_OtherHigh > 0 & !is.na(EMGEventData$TAS.20_z_OtherHigh)] - mean(EMGEventData$TAS.20_z_OtherHigh[EMGEventData$TAS.20_z_OtherHigh > 0 & !is.na(EMGEventData$TAS.20_z_OtherHigh)], na.rm = TRUE)
-lme6 <- lme(EMG_corr_mean ~ Treatment*Stimulus*Condition + TAS.20_z + TAS.20_z_OtherHigh + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
+lme6 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + TAS.20_z) + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
 plot(lme6)
 summary(lme6)
 intervals(lme6)
@@ -385,9 +370,7 @@ intervals(lme6)
 EMGEventData$PPI_SCI_z <- EMGEventData$PPI_1_SCI_R
 EMGEventData$PPI_SCI_z[EMGEventData$PPI_1_IR >= 45] <- NA # Exclude participants with too high scores on Inconsistent Responding measure
 EMGEventData$PPI_SCI_z <- scale(EMGEventData$PPI_SCI_z)
-EMGEventData$PPI_SCI_z_OtherHigh <- EMGEventData$PPI_SCI_z * EMGEventData$OtherHigh
-EMGEventData$PPI_SCI_z_OtherHigh[EMGEventData$PPI_SCI_z_OtherHigh > 0 & !is.na(EMGEventData$PPI_SCI_z_OtherHigh)] <- EMGEventData$PPI_SCI_z_OtherHigh[EMGEventData$PPI_SCI_z_OtherHigh > 0 & !is.na(EMGEventData$PPI_SCI_z_OtherHigh)] - mean(EMGEventData$PPI_SCI_z_OtherHigh[EMGEventData$PPI_SCI_z_OtherHigh > 0 & !is.na(EMGEventData$PPI_SCI_z_OtherHigh)], na.rm = TRUE)
-lme7 <- lme(EMG_corr_mean ~ Treatment*Stimulus*Condition + PPI_SCI_z + PPI_SCI_z_OtherHigh + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
+lme7 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + PPI_SCI_z) + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
 plot(lme7)
 summary(lme7)
 intervals(lme7)
@@ -396,9 +379,7 @@ intervals(lme7)
 EMGEventData$PPI_FD_z <- EMGEventData$PPI_1_FD_R
 EMGEventData$PPI_FD_z[EMGEventData$PPI_1_IR >= 45] <- NA # Exclude participants with too high scores on Inconsistent Responding measure
 EMGEventData$PPI_FD_z <- scale(EMGEventData$PPI_FD_z)
-EMGEventData$PPI_FD_z_OtherHigh <- EMGEventData$PPI_FD_z * EMGEventData$OtherHigh
-EMGEventData$PPI_FD_z_OtherHigh[EMGEventData$PPI_FD_z_OtherHigh > 0 & !is.na(EMGEventData$PPI_FD_z_OtherHigh)] <- EMGEventData$PPI_FD_z_OtherHigh[EMGEventData$PPI_FD_z_OtherHigh > 0 & !is.na(EMGEventData$PPI_FD_z_OtherHigh)] - mean(EMGEventData$PPI_FD_z_OtherHigh[EMGEventData$PPI_FD_z_OtherHigh > 0 & !is.na(EMGEventData$PPI_FD_z_OtherHigh)], na.rm = TRUE)
-lme8 <- lme(EMG_corr_mean ~ Treatment*Stimulus*Condition + PPI_FD_z + PPI_FD_z_OtherHigh + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
+lme8 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + PPI_FD_z) + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
 plot(lme8)
 summary(lme8)
 intervals(lme8)
@@ -407,97 +388,77 @@ intervals(lme8)
 EMGEventData$PPI_C_z <- EMGEventData$PPI_1_C_R
 EMGEventData$PPI_C_z[EMGEventData$PPI_1_IR >= 45] <- NA # Exclude participants with too high scores on Inconsistent Responding measure
 EMGEventData$PPI_C_z <- scale(EMGEventData$PPI_C_z)
-EMGEventData$PPI_C_z_OtherHigh <- EMGEventData$PPI_C_z * EMGEventData$OtherHigh
-EMGEventData$PPI_C_z_OtherHigh[EMGEventData$PPI_C_z_OtherHigh > 0 & !is.na(EMGEventData$PPI_C_z_OtherHigh)] <- EMGEventData$PPI_C_z_OtherHigh[EMGEventData$PPI_C_z_OtherHigh > 0 & !is.na(EMGEventData$PPI_C_z_OtherHigh)] - mean(EMGEventData$PPI_C_z_OtherHigh[EMGEventData$PPI_C_z_OtherHigh > 0 & !is.na(EMGEventData$PPI_C_z_OtherHigh)], na.rm = TRUE)
-lme9 <- lme(EMG_corr_mean ~ Treatment*Stimulus*Condition + PPI_C_z + PPI_C_z_OtherHigh + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
+lme9 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + PPI_C_z) + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
 plot(lme9)
 summary(lme9)
 intervals(lme9)
 
-# Make plots to compare effects for different scales
-# Put data in new frame
-data_main <- data.frame(scale = "PPI-R-C", beta = intervals(lme9)$fixed[5, 2], lower = intervals(lme9)$fixed[5, 1], upper = intervals(lme9)$fixed[5, 3], group = "PPI")
-data_main <- rbind(data_main, data.frame(scale = "PPI-R-FD", beta = intervals(lme8)$fixed[5, 2], lower = intervals(lme8)$fixed[5, 1], upper = intervals(lme8)$fixed[5, 3], group = "PPI"))
-data_main <- rbind(data_main, data.frame(scale = "PPI-R-SCI", beta = intervals(lme7)$fixed[5, 2], lower = intervals(lme7)$fixed[5, 1], upper = intervals(lme7)$fixed[5, 3], group = "PPI"))
-data_main <- rbind(data_main, data.frame(scale = "TAS-20", beta = intervals(lme6)$fixed[5, 2], lower = intervals(lme6)$fixed[5, 1], upper = intervals(lme6)$fixed[5, 3], group = "TAS"))
-data_main <- rbind(data_main, data.frame(scale = "STAI-T", beta = intervals(lme5)$fixed[5, 2], lower = intervals(lme5)$fixed[5, 1], upper = intervals(lme5)$fixed[5, 3], group = "STAI"))
-data_main <- rbind(data_main, data.frame(scale = "IRI-F", beta = intervals(lme4)$fixed[5, 2], lower = intervals(lme4)$fixed[5, 1], upper = intervals(lme4)$fixed[5, 3], group = "IRI"))
-data_main <- rbind(data_main, data.frame(scale = "IRI-PD", beta = intervals(lme3)$fixed[5, 2], lower = intervals(lme3)$fixed[5, 1], upper = intervals(lme3)$fixed[5, 3], group = "IRI"))
-data_main <- rbind(data_main, data.frame(scale = "IRI-PT", beta = intervals(lme2)$fixed[5, 2], lower = intervals(lme2)$fixed[5, 1], upper = intervals(lme2)$fixed[5, 3], group = "IRI"))
-data_main <- rbind(data_main, data.frame(scale = "IRI-EC", beta = intervals(lme1)$fixed[5, 2], lower = intervals(lme1)$fixed[5, 1], upper = intervals(lme1)$fixed[5, 3], group = "IRI"))
 
-# Make plot
-pdf("Fig_EMG7.pdf", width = 4, height = 4)
-axis.L <- function(side, ..., line.col){
-  if (side %in% c("bottom", "left")) {
-    col <- trellis.par.get("axis.text")$col
-    axis.default(side, ..., line.col = col)
-    if (side == "bottom")
-      grid::grid.lines(y = 0)
-  }
-}
+# Plot effects of rating scales
+# Corrugator responses to angry faces
+data_corr_angry <- data.frame(scale = "PPI-R-C", beta = intervals(lme9)$fixed[9, 2], lower = intervals(lme9)$fixed[9, 1], upper = intervals(lme9)$fixed[9, 3], group = "PPI", p = round(summary(lme9)$tTable[9, 5], 3))
+data_corr_angry <- rbind(data_corr_angry, data.frame(scale = "PPI-R-FD", beta = intervals(lme8)$fixed[9, 2], lower = intervals(lme8)$fixed[9, 1], upper = intervals(lme8)$fixed[9, 3], group = "PPI", p = round(summary(lme8)$tTable[9, 5], 3)))
+data_corr_angry <- rbind(data_corr_angry, data.frame(scale = "PPI-R-SCI", beta = intervals(lme7)$fixed[9, 2], lower = intervals(lme7)$fixed[9, 1], upper = intervals(lme7)$fixed[9, 3], group = "PPI", p = round(summary(lme7)$tTable[9, 5], 3)))
+data_corr_angry <- rbind(data_corr_angry, data.frame(scale = "TAS-20", beta = intervals(lme6)$fixed[9, 2], lower = intervals(lme6)$fixed[9, 1], upper = intervals(lme6)$fixed[9, 3], group = "TAS", p = round(summary(lme6)$tTable[9, 5], 3)))
+data_corr_angry <- rbind(data_corr_angry, data.frame(scale = "STAI-T", beta = intervals(lme5)$fixed[9, 2], lower = intervals(lme5)$fixed[9, 1], upper = intervals(lme5)$fixed[9, 3], group = "STAI", p = round(summary(lme5)$tTable[9, 5], 3)))
+data_corr_angry <- rbind(data_corr_angry, data.frame(scale = "IRI-F", beta = intervals(lme4)$fixed[9, 2], lower = intervals(lme4)$fixed[9, 1], upper = intervals(lme4)$fixed[9, 3], group = "IRI", p = round(summary(lme4)$tTable[9, 5], 3)))
+data_corr_angry <- rbind(data_corr_angry, data.frame(scale = "IRI-PD", beta = intervals(lme3)$fixed[9, 2], lower = intervals(lme3)$fixed[9, 1], upper = intervals(lme3)$fixed[9, 3], group = "IRI", p = round(summary(lme3)$tTable[9, 5], 3)))
+data_corr_angry <- rbind(data_corr_angry, data.frame(scale = "IRI-PT", beta = intervals(lme2)$fixed[9, 2], lower = intervals(lme2)$fixed[9, 1], upper = intervals(lme2)$fixed[9, 3], group = "IRI", p = round(summary(lme2)$tTable[9, 5], 3)))
+data_corr_angry <- rbind(data_corr_angry, data.frame(scale = "IRI-EC", beta = intervals(lme1)$fixed[9, 2], lower = intervals(lme1)$fixed[9, 1], upper = intervals(lme1)$fixed[9, 3], group = "IRI", p = round(summary(lme1)$tTable[9, 5], 3)))
+data_corr_angry <- data_corr_angry[c(9:1), ] # Reverse order
 
-sty <- list()
-sty$axis.line$col <- NA
-sty$strip.border$col <- NA
-sty$strip.background$col <- NA
-segplot(scale ~ lower + upper, data = data_main, 
-        centers = beta, 
-        lwd = 2,
-        draw.bands = FALSE,
-        col = c(col8, col8, col8, col3, col6, col5, col5, col5, col5),
-        par.settings = sty,
-        axis=axis.L,
-        xlab = "Beta, 95% CI",
-        main = "D. Corrugator EMG",
-        panel = function (x,y,z,...){
-          panel.segplot(x,y,z,...)
-          panel.abline(v=0,lty=2)
-        })
+pdf("Fig_EMG4.pdf", width = 7, height = 5)
+par(mar=c(5.1, 5.4, 4, 14))
+plot(x = data_corr_angry$beta, y = c(12:9, 7, 5, 3:1), xlab = expression(beta), ylab = "", frame.plot = F, xlim = c(min(data_corr_angry$lower), max(data_corr_angry$upper)), xaxt = "n", yaxt = "n")
+title("Corrugator, Angry", line = 2)
+abline(v = 0, col = "gray")
+axis(1, at = c(-0.04, 0, 0.04), labels = c(-0.04, 0, 0.04))
+points(x = data_corr_angry$beta, y = c(12:9, 7, 5, 3:1), pch = 16)
+arrows(data_corr_angry$lower, c(12:9, 7, 5, 3:1), data_corr_angry$upper, c(12:9, 7, 5, 3:1), length = 0, lwd = 1.5)
+par(las=1)
+mtext(side = 2, at = c(12:9, 7, 5, 3:1), text = c("IRI-EC", " IRI-PT", "IRI-PD", "IRI-F", "STAI-T", "TAS-20", "PPI-R-SCI", "PPI-R_FD", "PPI-R-C"), line = 1)
+mtext(side = 4, at = 13, text = expression(beta), line = 1)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_corr_angry$beta, 2), line = 1)
+mtext(side = 4, at = 13, text = "95 % CI", line = 4)
+CI <- paste("[", round(data_corr_angry$lower, 2), ", ", round(data_corr_angry$upper, 2), "]", sep = "")
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = CI, line = 4)
+mtext(side = 4, at = 13, text = expression(italic(p)), line = 10)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_corr_angry$p, line = 10)
 dev.off()
 
-# Put data in new frame
-data_emp <- data.frame(scale = "PPI-R-C", beta = intervals(lme9)$fixed[6, 2], lower = intervals(lme9)$fixed[6, 1], upper = intervals(lme9)$fixed[6, 3], group = "PPI")
-data_emp <- rbind(data_emp, data.frame(scale = "PPI-R-FD", beta = intervals(lme8)$fixed[6, 2], lower = intervals(lme8)$fixed[6, 1], upper = intervals(lme8)$fixed[6, 3], group = "PPI"))
-data_emp <- rbind(data_emp, data.frame(scale = "PPI-R-SCI", beta = intervals(lme7)$fixed[6, 2], lower = intervals(lme7)$fixed[6, 1], upper = intervals(lme7)$fixed[6, 3], group = "PPI"))
-data_emp <- rbind(data_emp, data.frame(scale = "TAS-20", beta = intervals(lme6)$fixed[6, 2], lower = intervals(lme6)$fixed[6, 1], upper = intervals(lme6)$fixed[6, 3], group = "TAS"))
-data_emp <- rbind(data_emp, data.frame(scale = "STAI-T", beta = intervals(lme5)$fixed[6, 2], lower = intervals(lme5)$fixed[6, 1], upper = intervals(lme5)$fixed[6, 3], group = "STAI"))
-data_emp <- rbind(data_emp, data.frame(scale = "IRI-F", beta = intervals(lme4)$fixed[6, 2], lower = intervals(lme4)$fixed[6, 1], upper = intervals(lme4)$fixed[6, 3], group = "IRI"))
-data_emp <- rbind(data_emp, data.frame(scale = "IRI-PD", beta = intervals(lme3)$fixed[6, 2], lower = intervals(lme3)$fixed[6, 1], upper = intervals(lme3)$fixed[6, 3], group = "IRI"))
-data_emp <- rbind(data_emp, data.frame(scale = "IRI-PT", beta = intervals(lme2)$fixed[6, 2], lower = intervals(lme2)$fixed[6, 1], upper = intervals(lme2)$fixed[6, 3], group = "IRI"))
-data_emp <- rbind(data_emp, data.frame(scale = "IRI-EC", beta = intervals(lme1)$fixed[6, 2], lower = intervals(lme1)$fixed[6, 1], upper = intervals(lme1)$fixed[6, 3], group = "IRI"))
+# Corrugator responses to happy faces
+data_corr_happy <- data.frame(scale = "PPI-R-C", beta = intervals(lme9)$fixed[10, 2], lower = intervals(lme9)$fixed[10, 1], upper = intervals(lme9)$fixed[10, 3], group = "PPI", p = round(summary(lme9)$tTable[10, 5], 3))
+data_corr_happy <- rbind(data_corr_happy, data.frame(scale = "PPI-R-FD", beta = intervals(lme8)$fixed[10, 2], lower = intervals(lme8)$fixed[10, 1], upper = intervals(lme8)$fixed[10, 3], group = "PPI", p = round(summary(lme8)$tTable[10, 5], 3)))
+data_corr_happy <- rbind(data_corr_happy, data.frame(scale = "PPI-R-SCI", beta = intervals(lme7)$fixed[10, 2], lower = intervals(lme7)$fixed[10, 1], upper = intervals(lme7)$fixed[10, 3], group = "PPI", p = round(summary(lme7)$tTable[10, 5], 3)))
+data_corr_happy <- rbind(data_corr_happy, data.frame(scale = "TAS-20", beta = intervals(lme6)$fixed[10, 2], lower = intervals(lme6)$fixed[10, 1], upper = intervals(lme6)$fixed[10, 3], group = "TAS", p = round(summary(lme6)$tTable[10, 5], 3)))
+data_corr_happy <- rbind(data_corr_happy, data.frame(scale = "STAI-T", beta = intervals(lme5)$fixed[10, 2], lower = intervals(lme5)$fixed[10, 1], upper = intervals(lme5)$fixed[10, 3], group = "STAI", p = round(summary(lme5)$tTable[10, 5], 3)))
+data_corr_happy <- rbind(data_corr_happy, data.frame(scale = "IRI-F", beta = intervals(lme4)$fixed[10, 2], lower = intervals(lme4)$fixed[10, 1], upper = intervals(lme4)$fixed[10, 3], group = "IRI", p = round(summary(lme4)$tTable[10, 5], 3)))
+data_corr_happy <- rbind(data_corr_happy, data.frame(scale = "IRI-PD", beta = intervals(lme3)$fixed[10, 2], lower = intervals(lme3)$fixed[10, 1], upper = intervals(lme3)$fixed[10, 3], group = "IRI", p = round(summary(lme3)$tTable[10, 5], 3)))
+data_corr_happy <- rbind(data_corr_happy, data.frame(scale = "IRI-PT", beta = intervals(lme2)$fixed[10, 2], lower = intervals(lme2)$fixed[10, 1], upper = intervals(lme2)$fixed[10, 3], group = "IRI", p = round(summary(lme2)$tTable[10, 5], 3)))
+data_corr_happy <- rbind(data_corr_happy, data.frame(scale = "IRI-EC", beta = intervals(lme1)$fixed[10, 2], lower = intervals(lme1)$fixed[10, 1], upper = intervals(lme1)$fixed[10, 3], group = "IRI", p = round(summary(lme1)$tTable[10, 5], 3)))
+data_corr_happy <- data_corr_happy[c(9:1), ] # Reverse order
 
-# Make plot
-pdf("Fig_EMG8.pdf", width = 4, height = 4)
-axis.L <- function(side, ..., line.col){
-  if (side %in% c("bottom", "left")) {
-    col <- trellis.par.get("axis.text")$col
-    axis.default(side, ..., line.col = col)
-    if (side == "bottom")
-      grid::grid.lines(y = 0)
-  }
-}
-
-sty <- list()
-sty$axis.line$col <- NA
-sty$strip.border$col <- NA
-sty$strip.background$col <- NA
-segplot(scale ~ lower + upper, data = data_emp, 
-        centers = beta, 
-        lwd = 2,
-        draw.bands = FALSE,
-        col = c(col8, col8, col8, col3, col6, col5, col5, col5, col5),
-        par.settings = sty,
-        axis=axis.L,
-        xlab = "Beta, 95% CI",
-        main = "D. Corrugator EMG",
-        panel = function (x,y,z,...){
-          panel.segplot(x,y,z,...)
-          panel.abline(v=0,lty=2)
-        })
+pdf("Fig_EMG5.pdf", width = 7, height = 5)
+par(mar=c(5.1, 5.4, 4, 14))
+plot(x = data_corr_happy$beta, y = c(12:9, 7, 5, 3:1), xlab = expression(beta), ylab = "", frame.plot = F, xlim = c(min(data_corr_happy$lower), max(data_corr_happy$upper)), xaxt = "n", yaxt = "n")
+title("Corrugator, Happy", line = 2)
+abline(v = 0, col = "gray")
+axis(1, at = c(-0.05, 0, 0.05), labels = c(-0.05, 0, 0.05))
+points(x = data_corr_happy$beta, y = c(12:9, 7, 5, 3:1), pch = 16)
+arrows(data_corr_happy$lower, c(12:9, 7, 5, 3:1), data_corr_happy$upper, c(12:9, 7, 5, 3:1), length = 0, lwd = 1.5)
+par(las=1)
+mtext(side = 2, at = c(12:9, 7, 5, 3:1), text = c("IRI-EC", " IRI-PT", "IRI-PD", "IRI-F", "STAI-T", "TAS-20", "PPI-R-SCI", "PPI-R-FD", "PPI-R-C"), line = 1)
+mtext(side = 4, at = 13, text = expression(beta), line = 1)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_corr_happy$beta, 2), line = 1)
+mtext(side = 4, at = 13, text = "95 % CI", line = 4)
+CI <- paste("[", round(data_corr_happy$lower, 2), ", ", round(data_corr_happy$upper, 2), "]", sep = "")
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = CI, line = 4)
+mtext(side = 4, at = 13, text = expression(italic(p)), line = 10)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_corr_happy$p, line = 10)
 dev.off()
 
-# Analyse zygomatic responses
+
+# Analyze zygomatic responses
 # Move all data to one big frame
 EMG_zyg <- data.frame()
 
@@ -602,27 +563,27 @@ abline(v = c(0, 2), lty = 2)
 
 
 # Make figures
-pdf("Fig_EMG1.pdf", width = 4, height = 4)
+pdf("Fig_EMG6.pdf", width = 7, height = 5)
 plot(MeanEMGzygAngryWave1, type = "n", col = col4, frame.plot = F, main = "Zygomatic EMG, Wave 1", xlab = "Time (s)", ylab = "EMG (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.8, 1.5))
 rect(2, 0.000001, 4, 10, col = "gray88", border = NA)
 abline(v = c(0, 2, 5), lty = 3)
 axis(1)
 axis(2, at = c(0.8, 1, 1.2, 1.4))
-lines(MeanEMGzygAngryWave1, col = col4, lwd = 2)
-lines(MeanEMGzygHappyWave1, col = col7, lwd = 2)
-lines(MeanEMGzygNeutralWave1, col = col8, lwd = 2)
+lines(lowess(MeanEMGzygAngryWave1, f = 0.1), col = col4, lwd = 2)
+lines(lowess(MeanEMGzygHappyWave1, f = 0.1), col = col7, lwd = 2)
+lines(lowess(MeanEMGzygNeutralWave1, f = 0.1), col = col8, lwd = 2)
 legend("topleft", lty = 1, col = c(col4, col7, col8), legend = c("Angry", "Happy", "Neutral"), bty = "n", lwd = 2)
 dev.off()
 
-pdf("Fig_EMG3.pdf", width = 4, height = 4)
+pdf("Fig_EMG7.pdf", width = 7, height = 5)
 plot(MeanEMGzygAngryWave2, type = "n", col = col4, frame.plot = F, main = "Zygomatic EMG, Wave 2", xlab = "Time (s)", ylab = "EMG (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.8, 1.5))
 rect(2, 0.000001, 4, 10, col = "gray88", border = NA)
 abline(v = c(0, 2, 4), lty = 3)
 axis(1)
 axis(2, at = c(0.8, 1, 1.2, 1.4))
-lines(MeanEMGzygAngryWave2, col = col4, lwd = 2)
-lines(MeanEMGzygHappyWave2, col = col7, lwd = 2)
-lines(MeanEMGzygNeutralWave2, col = col8, lwd = 2)
+lines(lowess(MeanEMGzygAngryWave2, f = 0.1), col = col4, lwd = 2)
+lines(lowess(MeanEMGzygHappyWave2, f = 0.1), col = col7, lwd = 2)
+lines(lowess(MeanEMGzygNeutralWave2, f = 0.1), col = col8, lwd = 2)
 dev.off()
 
 
@@ -650,29 +611,31 @@ EMGEventData2$EMG_zyg_mean <- log(EMGEventData2$EMG_zyg_mean)
 
 # Analyse data
 EMGEventData2 <- merge(EMGEventData2, demData, by = "Subject")
-EMGEventData2$Stimulus <- ordered(EMGEventData2$Stimulus, levels = c("Angry", "Neutral", "Happy"))
-
-# Build model
+EMGEventData2$Subject <- as.factor(EMGEventData2$Subject)
+EMGEventData2$Stimulus <- relevel(EMGEventData2$Stimulus, ref = "Neutral")
+EMGEventData2$Treatment <- relevel(EMGEventData2$Treatment, ref = "Placebo")
 EMGEventData2$IRI_EC_z <- scale(EMGEventData2$IRI_EC)
 
-lmezyg1 <- lme(EMG_zyg_mean ~ Treatment*Stimulus + Wave, data = EMGEventData2, random = ~1|Subject, na.action = na.omit)
-lmezyg2 <- lme(EMG_zyg_mean ~ Treatment + Wave, data = subset(EMGEventData2, Stimulus %in% c("Angry")), random = ~1|Subject, na.action = na.omit)
+
+# Build model
+lmezyg1 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = EMGEventData2, random = ~1|Subject, na.action = na.omit)
+lmezyg1b <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = subset(EMGEventData2, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 plot(lmezyg1)
 summary(lmezyg1)
 intervals(lmezyg1)
 
-summary(lmezyg2)
+summary(lmezyg1b)
 
 effzyg1 <- effect("Treatment*Stimulus", lmezyg1)
-#effzyg2 <- effect("Treatment*Stimulus", lmezyg2)
 
 # Compare plots to less custom-generated output for verification
 plot(effect("Treatment*Stimulus", lmezyg1))
-plot(effect("Treatment*Stimulus", lmezyg2))
+plot(effect("Stimulus*Treatment", lmezyg1b))
 
 # Plot results
-plot(c(effzyg1$fit[2], effzyg1$fit[4], effzyg1$fit[6]),
+pdf("Fig_EMG8.pdf", height = 5, width = 7)
+plot(c(effzyg1$fit[1], effzyg1$fit[3], effzyg1$fit[5]),
      type = "b",
      frame.plot = F,
      ylab = "EMG (ratio)",
@@ -684,14 +647,146 @@ plot(c(effzyg1$fit[2], effzyg1$fit[4], effzyg1$fit[6]),
      col = col1,
      main = "Zygomatic EMG"
 )
-lines(c(1, 1), c(effzyg1$upper[2], effzyg1$lower[2]), col = col1)
-lines(c(2, 2), c(effzyg1$upper[4], effzyg1$lower[4]), col = col1)
-lines(c(3, 3), c(effzyg1$upper[6], effzyg1$lower[6]), col = col1)
-lines(c(1.1, 2.1, 3.1), c(effzyg1$fit[1], effzyg1$fit[3], effzyg1$fit[5]), type = "b", col = col2, pch = 16)
-lines(c(1.1, 1.1), c(effzyg1$upper[1], effzyg1$lower[1]), col = col2)
-lines(c(2.1, 2.1), c(effzyg1$upper[3], effzyg1$lower[3]), col = col2)
-lines(c(3.1, 3.1), c(effzyg1$upper[5], effzyg1$lower[5]), col = col2)
-axis(1, at = c(1.05, 2.05, 3.05), labels = c("Angry", "Neutral", "Happy"))
+lines(c(1, 1), c(effzyg1$upper[1], effzyg1$lower[1]), col = col1)
+lines(c(2, 2), c(effzyg1$upper[3], effzyg1$lower[3]), col = col1)
+lines(c(3, 3), c(effzyg1$upper[5], effzyg1$lower[5]), col = col1)
+lines(c(1.1, 2.1, 3.1), c(effzyg1$fit[2], effzyg1$fit[4], effzyg1$fit[6]), type = "b", col = col2, pch = 16)
+lines(c(1.1, 1.1), c(effzyg1$upper[2], effzyg1$lower[2]), col = col2)
+lines(c(2.1, 2.1), c(effzyg1$upper[4], effzyg1$lower[4]), col = col2)
+lines(c(3.1, 3.1), c(effzyg1$upper[6], effzyg1$lower[6]), col = col2)
+axis(1, at = c(1.05, 2.05, 3.05), labels = c("Neutral", "Angry", "Happy"))
 axis(2, at = c(-0.2, -0.1, 0, 0.1))
 legend("topleft", col = c(col1, col2), pch = c(1, 16), legend = c("Placebo", "Oxazepam"), bty = "n", lty = 1)
+dev.off()
 
+# Analyse other rating scales as predictors
+# Since rating scales may be collinear, we include them one by one
+
+# IRI-PT
+EMGEventData2$IRI_PT_z <- scale(EMGEventData2$IRI_PT)
+lmezyg2 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_PT_z) + Wave, data = EMGEventData2, random = ~1|Subject, na.action = na.omit)
+plot(lmezyg2)
+summary(lmezyg2)
+intervals(lmezyg2)
+
+# IRI-PD
+EMGEventData2$IRI_PD_z <- scale(EMGEventData2$IRI_PD)
+lmezyg3 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_PD_z) + Wave, data = EMGEventData2, random = ~1|Subject, na.action = na.omit)
+plot(lmezyg3)
+summary(lmezyg3)
+intervals(lmezyg3)
+
+# IRI-F
+EMGEventData2$IRI_F_z <- scale(EMGEventData2$IRI_F)
+lmezyg4 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_F_z) + Wave, data = EMGEventData2, random = ~1|Subject, na.action = na.omit)
+plot(lmezyg4)
+summary(lmezyg4)
+intervals(lmezyg4)
+
+# STAI-T
+EMGEventData2$STAI.T_z <- scale(EMGEventData2$STAI.T)
+lmezyg5 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + STAI.T_z) + Wave, data = EMGEventData2, random = ~1|Subject, na.action = na.omit)
+plot(lmezyg5)
+summary(lmezyg5)
+intervals(lmezyg5)
+
+# TAS-20
+EMGEventData2$TAS.20_z <- scale(EMGEventData2$TAS.20)
+lmezyg6 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + TAS.20_z) + Wave, data = EMGEventData2, random = ~1|Subject, na.action = na.omit)
+plot(lmezyg6)
+summary(lmezyg6)
+intervals(lmezyg6)
+
+# PPI-R-SCI
+EMGEventData2$PPI_SCI_z <- EMGEventData2$PPI_1_SCI_R
+EMGEventData2$PPI_SCI_z[EMGEventData2$PPI_1_IR >= 45] <- NA # Exclude participants with too high scores on Inconsistent Responding measure
+EMGEventData2$PPI_SCI_z <- scale(EMGEventData2$PPI_SCI_z)
+lmezyg7 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + PPI_SCI_z) + Wave, data = EMGEventData2, random = ~1|Subject, na.action = na.omit)
+plot(lmezyg7)
+summary(lmezyg7)
+intervals(lmezyg7)
+
+# PPI-R-FD
+EMGEventData2$PPI_FD_z <- EMGEventData2$PPI_1_FD_R
+EMGEventData2$PPI_FD_z[EMGEventData2$PPI_1_IR >= 45] <- NA # Exclude participants with too high scores on Inconsistent Responding measure
+EMGEventData2$PPI_FD_z <- scale(EMGEventData2$PPI_FD_z)
+lmezyg8 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + PPI_FD_z) + Wave, data = EMGEventData2, random = ~1|Subject, na.action = na.omit)
+plot(lmezyg8)
+summary(lmezyg8)
+intervals(lmezyg8)
+
+# PPI-R-C
+EMGEventData2$PPI_C_z <- EMGEventData2$PPI_1_C_R
+EMGEventData2$PPI_C_z[EMGEventData2$PPI_1_IR >= 45] <- NA # Exclude participants with too high scores on Inconsistent Responding measure
+EMGEventData2$PPI_C_z <- scale(EMGEventData2$PPI_C_z)
+lmezyg9 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + PPI_C_z) + Wave, data = EMGEventData2, random = ~1|Subject, na.action = na.omit)
+plot(lmezyg9)
+summary(lmezyg9)
+intervals(lmezyg9)
+
+# Plot effects of rating scales
+# Zygomatic responses to angry faces
+data_zyg_angry <- data.frame(scale = "PPI-R-C", beta = intervals(lmezyg9)$fixed[9, 2], lower = intervals(lmezyg9)$fixed[9, 1], upper = intervals(lmezyg9)$fixed[9, 3], group = "PPI", p = round(summary(lmezyg9)$tTable[9, 5], 3))
+data_zyg_angry <- rbind(data_zyg_angry, data.frame(scale = "PPI-R-FD", beta = intervals(lmezyg8)$fixed[9, 2], lower = intervals(lmezyg8)$fixed[9, 1], upper = intervals(lmezyg8)$fixed[9, 3], group = "PPI", p = round(summary(lmezyg8)$tTable[9, 5], 3)))
+data_zyg_angry <- rbind(data_zyg_angry, data.frame(scale = "PPI-R-SCI", beta = intervals(lmezyg7)$fixed[9, 2], lower = intervals(lmezyg7)$fixed[9, 1], upper = intervals(lmezyg7)$fixed[9, 3], group = "PPI", p = round(summary(lmezyg7)$tTable[9, 5], 3)))
+data_zyg_angry <- rbind(data_zyg_angry, data.frame(scale = "TAS-20", beta = intervals(lmezyg6)$fixed[9, 2], lower = intervals(lmezyg6)$fixed[9, 1], upper = intervals(lmezyg6)$fixed[9, 3], group = "TAS", p = round(summary(lmezyg6)$tTable[9, 5], 3)))
+data_zyg_angry <- rbind(data_zyg_angry, data.frame(scale = "STAI-T", beta = intervals(lmezyg5)$fixed[9, 2], lower = intervals(lmezyg5)$fixed[9, 1], upper = intervals(lmezyg5)$fixed[9, 3], group = "STAI", p = round(summary(lmezyg5)$tTable[9, 5], 3)))
+data_zyg_angry <- rbind(data_zyg_angry, data.frame(scale = "IRI-F", beta = intervals(lmezyg4)$fixed[9, 2], lower = intervals(lmezyg4)$fixed[9, 1], upper = intervals(lmezyg4)$fixed[9, 3], group = "IRI", p = round(summary(lmezyg4)$tTable[9, 5], 3)))
+data_zyg_angry <- rbind(data_zyg_angry, data.frame(scale = "IRI-PD", beta = intervals(lmezyg3)$fixed[9, 2], lower = intervals(lmezyg3)$fixed[9, 1], upper = intervals(lmezyg3)$fixed[9, 3], group = "IRI", p = round(summary(lmezyg3)$tTable[9, 5], 3)))
+data_zyg_angry <- rbind(data_zyg_angry, data.frame(scale = "IRI-PT", beta = intervals(lmezyg2)$fixed[9, 2], lower = intervals(lmezyg2)$fixed[9, 1], upper = intervals(lmezyg2)$fixed[9, 3], group = "IRI", p = round(summary(lmezyg2)$tTable[9, 5], 3)))
+data_zyg_angry <- rbind(data_zyg_angry, data.frame(scale = "IRI-EC", beta = intervals(lmezyg1)$fixed[9, 2], lower = intervals(lmezyg1)$fixed[9, 1], upper = intervals(lmezyg1)$fixed[9, 3], group = "IRI", p = round(summary(lmezyg1)$tTable[9, 5], 3)))
+data_zyg_angry <- data_zyg_angry[c(9:1), ] # Reverse order
+
+pdf("Fig_EMG9.pdf", width = 7, height = 5)
+par(mar=c(5.1, 5.4, 4, 14))
+plot(x = data_zyg_angry$beta, y = c(12:9, 7, 5, 3:1), xlab = expression(beta), ylab = "", frame.plot = F, xlim = c(min(data_zyg_angry$lower), max(data_zyg_angry$upper)), xaxt = "n", yaxt = "n")
+title("Zygomatic, Angry", line = 2)
+abline(v = 0, col = "gray")
+axis(1, at = c(-0.05, 0, 0.05), labels = c(-0.05, 0, 0.05))
+points(x = data_zyg_angry$beta, y = c(12:9, 7, 5, 3:1), pch = 16)
+arrows(data_zyg_angry$lower, c(12:9, 7, 5, 3:1), data_zyg_angry$upper, c(12:9, 7, 5, 3:1), length = 0, lwd = 1.5)
+par(las=1)
+mtext(side = 2, at = c(12:9, 7, 5, 3:1), text = c("IRI-EC", " IRI-PT", "IRI-PD", "IRI-F", "STAI-T", "TAS-20", "PPI-R-SCI", "PPI-R_FD", "PPI-R-C"), line = 1)
+mtext(side = 4, at = 13, text = expression(beta), line = 1)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_zyg_angry$beta, 2), line = 1)
+mtext(side = 4, at = 13, text = "95 % CI", line = 4)
+CI <- paste("[", round(data_zyg_angry$lower, 2), ", ", round(data_zyg_angry$upper, 2), "]", sep = "")
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = CI, line = 4)
+mtext(side = 4, at = 13, text = expression(italic(p)), line = 10)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_zyg_angry$p, line = 10)
+dev.off()
+
+# Zygomatic responses to happy faces
+data_zyg_happy <- data.frame(scale = "PPI-R-C", beta = intervals(lmezyg9)$fixed[10, 2], lower = intervals(lmezyg9)$fixed[10, 1], upper = intervals(lmezyg9)$fixed[10, 3], group = "PPI", p = round(summary(lmezyg9)$tTable[10, 5], 3))
+data_zyg_happy <- rbind(data_zyg_happy, data.frame(scale = "PPI-R-FD", beta = intervals(lmezyg8)$fixed[10, 2], lower = intervals(lmezyg8)$fixed[10, 1], upper = intervals(lmezyg8)$fixed[10, 3], group = "PPI", p = round(summary(lmezyg8)$tTable[10, 5], 3)))
+data_zyg_happy <- rbind(data_zyg_happy, data.frame(scale = "PPI-R-SCI", beta = intervals(lmezyg7)$fixed[10, 2], lower = intervals(lmezyg7)$fixed[10, 1], upper = intervals(lmezyg7)$fixed[10, 3], group = "PPI", p = round(summary(lmezyg7)$tTable[10, 5], 3)))
+data_zyg_happy <- rbind(data_zyg_happy, data.frame(scale = "TAS-20", beta = intervals(lmezyg6)$fixed[10, 2], lower = intervals(lmezyg6)$fixed[10, 1], upper = intervals(lmezyg6)$fixed[10, 3], group = "TAS", p = round(summary(lmezyg6)$tTable[10, 5], 3)))
+data_zyg_happy <- rbind(data_zyg_happy, data.frame(scale = "STAI-T", beta = intervals(lmezyg5)$fixed[10, 2], lower = intervals(lmezyg5)$fixed[10, 1], upper = intervals(lmezyg5)$fixed[10, 3], group = "STAI", p = round(summary(lmezyg5)$tTable[10, 5], 3)))
+data_zyg_happy <- rbind(data_zyg_happy, data.frame(scale = "IRI-F", beta = intervals(lmezyg4)$fixed[10, 2], lower = intervals(lmezyg4)$fixed[10, 1], upper = intervals(lmezyg4)$fixed[10, 3], group = "IRI", p = round(summary(lmezyg4)$tTable[10, 5], 3)))
+data_zyg_happy <- rbind(data_zyg_happy, data.frame(scale = "IRI-PD", beta = intervals(lmezyg3)$fixed[10, 2], lower = intervals(lmezyg3)$fixed[10, 1], upper = intervals(lmezyg3)$fixed[10, 3], group = "IRI", p = round(summary(lmezyg3)$tTable[10, 5], 3)))
+data_zyg_happy <- rbind(data_zyg_happy, data.frame(scale = "IRI-PT", beta = intervals(lmezyg2)$fixed[10, 2], lower = intervals(lmezyg2)$fixed[10, 1], upper = intervals(lmezyg2)$fixed[10, 3], group = "IRI", p = round(summary(lmezyg2)$tTable[10, 5], 3)))
+data_zyg_happy <- rbind(data_zyg_happy, data.frame(scale = "IRI-EC", beta = intervals(lmezyg1)$fixed[10, 2], lower = intervals(lmezyg1)$fixed[10, 1], upper = intervals(lmezyg1)$fixed[10, 3], group = "IRI", p = round(summary(lmezyg1)$tTable[10, 5], 3)))
+data_zyg_happy <- data_zyg_happy[c(9:1), ] # Reverse order
+
+pdf("Fig_EMG10.pdf", width = 7, height = 5)
+par(mar=c(5.1, 5.4, 4, 14))
+plot(x = data_zyg_happy$beta, y = c(12:9, 7, 5, 3:1), xlab = expression(beta), ylab = "", frame.plot = F, xlim = c(min(data_zyg_happy$lower), max(data_zyg_happy$upper)), xaxt = "n", yaxt = "n")
+title("Zygomatic, happy", line = 2)
+abline(v = 0, col = "gray")
+axis(1, at = c(-0.05, 0, 0.05), labels = c(-0.05, 0, 0.05))
+points(x = data_zyg_happy$beta, y = c(12:9, 7, 5, 3:1), pch = 16)
+arrows(data_zyg_happy$lower, c(12:9, 7, 5, 3:1), data_zyg_happy$upper, c(12:9, 7, 5, 3:1), length = 0, lwd = 1.5)
+par(las=1)
+mtext(side = 2, at = c(12:9, 7, 5, 3:1), text = c("IRI-EC", " IRI-PT", "IRI-PD", "IRI-F", "STAI-T", "TAS-20", "PPI-R-SCI", "PPI-R_FD", "PPI-R-C"), line = 1)
+mtext(side = 4, at = 13, text = expression(beta), line = 1)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_zyg_happy$beta, 2), line = 1)
+mtext(side = 4, at = 13, text = "95 % CI", line = 4)
+CI <- paste("[", round(data_zyg_happy$lower, 2), ", ", round(data_zyg_happy$upper, 2), "]", sep = "")
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = CI, line = 4)
+mtext(side = 4, at = 13, text = expression(italic(p)), line = 10)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_zyg_happy$p, line = 10)
+dev.off()
+
+# Write regression output tables
+write.csv(summary(lme1b)$tTable, file = "Corr_unadjusted.csv")
+write.csv(summary(lme1)$tTable, file = "Corr_IRI_EC.csv")
