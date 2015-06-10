@@ -87,7 +87,7 @@ plot(lme1)
 summary(lme1)
 intervals(lme1)
 
-eff1 <- effect("Stimulus*Treatment", lme1)
+eff1 <- effect("Stimulus*Treatment", lme1b)
 
 pdf("Fig_EMG3.pdf", width = 7, height = 5)
 plot(c(eff1$fit[1], eff1$fit[2], eff1$fit[3]),
@@ -115,7 +115,7 @@ legend("topright", col = c(col1, col2), pch = c(1, 16), legend = c("Placebo", "O
 dev.off()
 
 # Compare plot to less custom-generated output for verification
-plot(effect("Stimulus*Treatment", lme1))
+plot(effect("Stimulus*Treatment", lme1b))
 
 # Analyse other rating scales as predictors
 # Since rating scales may be collinear, we include them one by one
@@ -247,9 +247,9 @@ mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_corr_happy$p, line = 10)
 dev.off()
 
 # Analyse effects with angry as reference level
-CorrugatorEventData$Stimulus <- relevel(CorrugatorEventData$Stimulus, ref = "Angry")
-lme1c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = CorrugatorEventData, random = ~1|Subject, na.action = na.omit)
-summary(lme1c)
+#CorrugatorEventData$Stimulus <- relevel(CorrugatorEventData$Stimulus, ref = "Angry")
+#lme1c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = CorrugatorEventData, random = ~1|Subject, na.action = na.omit)
+#summary(lme1c)
 
 
 # Analyze zygomatic responses
@@ -287,7 +287,7 @@ ZygomaticEventData$IRI_EC_z <- scale(ZygomaticEventData$IRI_EC)
 
 # Build model
 lmezyg1 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = ZygomaticEventData, random = ~1|Subject, na.action = na.omit)
-lmezyg1b <- lme(EMG_zyg_mean ~ Stimulus*Treatment + Wave, data = subset(ZygomaticEventData, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
+lmezyg1b <- lme(EMG_zyg_mean ~ Stimulus*Treatment + Wave, data = ZygomaticEventData, random = ~1|Subject, na.action = na.omit)
 
 plot(lmezyg1)
 summary(lmezyg1)
@@ -295,7 +295,7 @@ intervals(lmezyg1)
 
 summary(lmezyg1b)
 
-effzyg1 <- effect("Stimulus*Treatment", lmezyg1)
+effzyg1 <- effect("Stimulus*Treatment", lmezyg1b)
 
 # Compare plots to less custom-generated output for verification
 plot(effect("Stimulus*Treatment", lmezyg1))
@@ -477,3 +477,37 @@ write.csv(summary(lmezyg6)$tTable, file = "Zyg_TAS_20.csv")
 write.csv(summary(lmezyg7)$tTable, file = "Zyg_PPI_R_SCI.csv")
 write.csv(summary(lmezyg8)$tTable, file = "Zyg_PPI_R_FD.csv")
 write.csv(summary(lmezyg9)$tTable, file = "Zyg_PPI_R_C.csv")
+
+# Analyse happy vs angry conditions separately
+lme1br <- lme(EMG_corr_mean ~ Stimulus*Treatment + Wave, data = CorrugatorEventData[CorrugatorEventData$Stimulus != "Neutral", ], random = ~1|Subject, na.action = na.omit)
+summary(lme1br)
+write.csv(summary(lme1br)$tTable, file = "Corr_AngryHappy.csv")
+
+lmezyg1br <- lme(EMG_zyg_mean ~ Stimulus*Treatment + Wave, data = ZygomaticEventData[ZygomaticEventData$Stimulus != "Neutral", ], random = ~1|Subject, na.action = na.omit)
+summary(lmezyg1br)
+write.csv(summary(lmezyg1br)$tTable, file = "Zyg_AngryHappy.csv")
+
+# Analyse waves 1 and 2 separately
+lme1bw1 <- lme(EMG_corr_mean ~ Stimulus*Treatment, data = CorrugatorEventData[CorrugatorEventData$Wave == 1, ], random = ~1|Subject, na.action = na.omit)
+lme1bw2 <- lme(EMG_corr_mean ~ Stimulus*Treatment, data = CorrugatorEventData[CorrugatorEventData$Wave == 2, ], random = ~1|Subject, na.action = na.omit)
+summary(lme1bw1)
+summary(lme1bw2)
+write.csv(summary(lme1bw1)$tTable, file = "Corr_wave1.csv")
+write.csv(summary(lme1bw2)$tTable, file = "Corr_wave2.csv")
+
+lmezyg1bw1 <- lme(EMG_zyg_mean ~ Stimulus*Treatment, data = ZygomaticEventData[ZygomaticEventData$Wave == 1, ], random = ~1|Subject, na.action = na.omit)
+lmezyg1bw2 <- lme(EMG_zyg_mean ~ Stimulus*Treatment, data = ZygomaticEventData[ZygomaticEventData$Wave == 2, ], random = ~1|Subject, na.action = na.omit)
+summary(lmezyg1bw1)
+summary(lmezyg1bw2)
+write.csv(summary(lmezyg1bw1)$tTable, file = "Zyg_wave1.csv")
+write.csv(summary(lmezyg1bw2)$tTable, file = "Zyg_wave2.csv")
+
+# Calculate a response index for each participant and write
+Corr_agg <- aggregate(CorrugatorEventData[, c("EMG_corr_mean", "Subject", "Stimulus")], list(Subject = CorrugatorEventData$Subject, Stimulus = CorrugatorEventData$Stimulus), FUN = "mean")
+Zyg_agg <- aggregate(ZygomaticEventData[, c("EMG_zyg_mean", "Subject", "Stimulus")], list(Subject = ZygomaticEventData$Subject, Stimulus = ZygomaticEventData$Stimulus), FUN = "mean")
+IndividualResponses <- data.frame(Subject = Corr_agg$Subject[Corr_agg$Stimulus == "Angry"], 
+                                  CorrAngry = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Angry"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
+                                  CorrHappy = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Happy"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
+                                  ZygAngry = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Angry"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"],
+                                  ZygHappy = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Happy"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"])
+
