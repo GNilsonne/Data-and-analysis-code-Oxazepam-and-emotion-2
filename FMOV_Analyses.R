@@ -510,4 +510,4 @@ IndividualResponses <- data.frame(Subject = Corr_agg$Subject[Corr_agg$Stimulus =
                                   CorrHappy = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Happy"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
                                   ZygAngry = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Angry"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"],
                                   ZygHappy = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Happy"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"])
-
+write.csv(IndividualResponses, file = "IndividualResponsesFMOV.csv", row.names = FALSE)
