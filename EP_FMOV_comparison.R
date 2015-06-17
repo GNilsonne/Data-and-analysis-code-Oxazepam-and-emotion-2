@@ -41,23 +41,13 @@ fmov_emg <- read.csv(text = fmov_emg_url)
 # Analyse covariance within EP experiment
 # Merge data files
 ep_ind <- merge(ep_ratings, ep_scr, by = "Subject", all = T)
-names(ep_ind) <- c("Subject", "ratings_self", "ratings_other", "ratings_self_vs_other", "scr_self", "scr_other", "scr_self_vs_other")
 ep_ind <- merge(ep_ind, ep_emg, by = "Subject", all = T)
 ep_ind <- merge(ep_ind, ep_hr, by = "Subject", all = T)
-names(ep_ind) <- c("Subject", "ratings_self", "ratings_other", "ratings_self_vs_other", "scr_self", "scr_other", "scr_self_vs_other", "emg_self", "emg_other", "emg_self_vs_other", "hr_self", "hr_other", "hr_self_vs_other")
 
 # Inspect covariance
-pairs(~ ratings_self + scr_self + emg_self + hr_self, data = ep_ind,
+pairs(~ Unpleasantness + sqrtSCR + EMG_corr_mean + hr_mean, data = ep_ind,
       lower.panel = panel.smooth, upper.panel = panel.cor, 
-      pch = 20, main = "EP Self")
-
-pairs(~ ratings_other + scr_other + emg_other + hr_other, data = ep_ind,
-      lower.panel = panel.smooth, upper.panel = panel.cor, 
-      pch = 20, main = "EP Other")
-
-pairs(~ ratings_self_vs_other + scr_self_vs_other + emg_self_vs_other + hr_self_vs_other, data = ep_ind,
-      lower.panel = panel.smooth, upper.panel = panel.cor, 
-      pch = 20, main = "EP Self vs Other")
+      pch = 20, main = "EP Other High")
 
 # Analyse covariance within FMOV experiment
 # Inspect covariance
@@ -65,10 +55,11 @@ pairs(~ CorrAngry + CorrHappy + ZygAngry + ZygHappy, data = fmov_emg,
       lower.panel = panel.smooth, upper.panel = panel.cor, 
       pch = 20, main = "FMOV")
 
+# Analyse covariance between FMOV and EP experiments
 # I choose to make one compound variable for FMOV responses based on corrugator and zygomatic responses to happy faces, since that was where we found main effects and since they correlated inversely, as expected.
 fmov_emg$fmov_compound_z <- scale(fmov_emg$ZygHappy - fmov_emg$CorrHappy)
 ind <- merge(ep_ind, fmov_emg[, c("Subject", "CorrHappy", "ZygHappy", "fmov_compound_z")], by = "Subject", all = T)
 
-pairs(~ ratings_self + scr_self + emg_self + hr_self + CorrHappy + ZygHappy + fmov_compound_z, data = ind,
+pairs(~ Unpleasantness + sqrtSCR + EMG_corr_mean + hr_mean + fmov_compound_z, data = ind,
       lower.panel = panel.smooth, upper.panel = panel.cor, 
-      pch = 20, main = "EP and FMOV")
+      pch = 20, main = "EP Other High and FMOV")
