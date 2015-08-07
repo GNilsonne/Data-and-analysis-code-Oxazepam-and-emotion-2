@@ -8,6 +8,7 @@ require(RColorBrewer)
 require(nlme)
 require(effects)
 require(latticeExtra) # To make dotcharts
+require(parallel) # To increase processing speed
 
 # Define colors for later
 col1 = brewer.pal(8, "Dark2")[1]
@@ -21,6 +22,8 @@ col8 = brewer.pal(8, "Dark2")[8]
 
 # Define function to read data
 fun_readEMGdata <- function(X){
+  
+  require(RCurl) # To read data from GitHub
   
   # Read data file
   if(X == 9){
@@ -130,8 +133,12 @@ demData <- read.csv(text = demDataURL)
 IncludedSubjects <- demData$Subject[demData$Included_FMOV == T]
 SubjectsWave1 <- demData$Subject[demData$Included_FMOV == T & demData$Wave == 1]
 SubjectsWave2 <- demData$Subject[demData$Included_FMOV == T & demData$Wave == 2]
-EMGDataList <- lapply(IncludedSubjects, FUN = fun_readEMGdata)
-
+#EMGDataList <- lapply(IncludedSubjects, FUN = fun_readEMGdata)
+# Read Acqknowledge datafiles with parallelization to save time
+no_cores <- detectCores() - 1 # Determine number of cores
+cl <- makeCluster(no_cores) # Initiate cluster
+EMGDataList <- parLapply(cl, IncludedSubjects, fun = fun_readEMGdata)
+stopCluster(cl) # Stop cluster
 
 # Analyse data, starting with corrugator activity
 # Move all data to one big frame
@@ -291,8 +298,7 @@ EMGEventData$IRI_EC_z <- scale(EMGEventData$IRI_EC)
 # Build model
 lme1 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
 lme1b <- lme(EMG_corr_mean ~ Stimulus*Treatment + Wave, data = EMGEventData, random = ~1|Subject, na.action = na.omit)
-
-#lme1c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = subset(EMGEventData, Stimulus %in% c("Angry", "Neutral")), random = ~1|Subject, na.action = na.omit)
+lme1c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = subset(EMGEventData, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 plot(lme1)
 summary(lme1)
@@ -337,6 +343,7 @@ lme2 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_PT_z) + Wave, data = EMGEv
 plot(lme2)
 summary(lme2)
 intervals(lme2)
+lme2c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_PT_z) + Wave, data = subset(EMGEventData, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # IRI-PD
 EMGEventData$IRI_PD_z <- scale(EMGEventData$IRI_PD)
@@ -344,6 +351,7 @@ lme3 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_PD_z) + Wave, data = EMGEv
 plot(lme3)
 summary(lme3)
 intervals(lme3)
+lme3c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_PD_z) + Wave, data = subset(EMGEventData, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # IRI-F
 EMGEventData$IRI_F_z <- scale(EMGEventData$IRI_F)
@@ -351,6 +359,7 @@ lme4 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_F_z) + Wave, data = EMGEve
 plot(lme4)
 summary(lme4)
 intervals(lme4)
+lme4c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + IRI_F_z) + Wave, data = subset(EMGEventData, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # STAI-T
 EMGEventData$STAI.T_z <- scale(EMGEventData$STAI.T)
@@ -358,6 +367,7 @@ lme5 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + STAI.T_z) + Wave, data = EMGEv
 plot(lme5)
 summary(lme5)
 intervals(lme5)
+lme5c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + STAI.T_z) + Wave, data = subset(EMGEventData, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # TAS-20
 EMGEventData$TAS.20_z <- scale(EMGEventData$TAS.20)
@@ -365,6 +375,7 @@ lme6 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + TAS.20_z) + Wave, data = EMGEv
 plot(lme6)
 summary(lme6)
 intervals(lme6)
+lme6c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + TAS.20_z) + Wave, data = subset(EMGEventData, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # PPI-R-SCI
 EMGEventData$PPI_SCI_z <- EMGEventData$PPI_1_SCI_R
@@ -374,6 +385,7 @@ lme7 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + PPI_SCI_z) + Wave, data = EMGE
 plot(lme7)
 summary(lme7)
 intervals(lme7)
+lme7c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + PPI_SCI_z) + Wave, data = subset(EMGEventData, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # PPI-R-FD
 EMGEventData$PPI_FD_z <- EMGEventData$PPI_1_FD_R
@@ -383,6 +395,7 @@ lme8 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + PPI_FD_z) + Wave, data = EMGEv
 plot(lme8)
 summary(lme8)
 intervals(lme8)
+lme8c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + PPI_FD_z) + Wave, data = subset(EMGEventData, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # PPI-R-C
 EMGEventData$PPI_C_z <- EMGEventData$PPI_1_C_R
@@ -392,6 +405,7 @@ lme9 <- lme(EMG_corr_mean ~ Stimulus*(Treatment + PPI_C_z) + Wave, data = EMGEve
 plot(lme9)
 summary(lme9)
 intervals(lme9)
+lme9c <- lme(EMG_corr_mean ~ Stimulus*(Treatment + PPI_C_z) + Wave, data = subset(EMGEventData, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 
 # Plot effects of rating scales
@@ -455,6 +469,37 @@ CI <- paste("[", round(data_corr_happy$lower, 2), ", ", round(data_corr_happy$up
 mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = CI, line = 4)
 mtext(side = 4, at = 13, text = expression(italic(p)), line = 10)
 mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_corr_happy$p, line = 10)
+dev.off()
+
+# Corrugator responses to angry faces vs happy faces
+data_corr_ah <- data.frame(scale = "PPI-R-C", beta = intervals(lme9c)$fixed[7, 2], lower = intervals(lme9c)$fixed[7, 1], upper = intervals(lme9c)$fixed[7, 3], group = "PPI", p = round(summary(lme9c)$tTable[7, 5], 3))
+data_corr_ah <- rbind(data_corr_ah, data.frame(scale = "PPI-R-FD", beta = intervals(lme8c)$fixed[7, 2], lower = intervals(lme8c)$fixed[7, 1], upper = intervals(lme8c)$fixed[7, 3], group = "PPI", p = round(summary(lme8c)$tTable[7, 5], 3)))
+data_corr_ah <- rbind(data_corr_ah, data.frame(scale = "PPI-R-SCI", beta = intervals(lme7c)$fixed[7, 2], lower = intervals(lme7c)$fixed[7, 1], upper = intervals(lme7c)$fixed[7, 3], group = "PPI", p = round(summary(lme7c)$tTable[7, 5], 3)))
+data_corr_ah <- rbind(data_corr_ah, data.frame(scale = "TAS-20", beta = intervals(lme6c)$fixed[7, 2], lower = intervals(lme6c)$fixed[7, 1], upper = intervals(lme6c)$fixed[7, 3], group = "TAS", p = round(summary(lme6c)$tTable[7, 5], 3)))
+data_corr_ah <- rbind(data_corr_ah, data.frame(scale = "STAI-T", beta = intervals(lme5c)$fixed[7, 2], lower = intervals(lme5c)$fixed[7, 1], upper = intervals(lme5c)$fixed[7, 3], group = "STAI", p = round(summary(lme5c)$tTable[7, 5], 3)))
+data_corr_ah <- rbind(data_corr_ah, data.frame(scale = "IRI-F", beta = intervals(lme4c)$fixed[7, 2], lower = intervals(lme4c)$fixed[7, 1], upper = intervals(lme4c)$fixed[7, 3], group = "IRI", p = round(summary(lme4c)$tTable[7, 5], 3)))
+data_corr_ah <- rbind(data_corr_ah, data.frame(scale = "IRI-PD", beta = intervals(lme3c)$fixed[7, 2], lower = intervals(lme3c)$fixed[7, 1], upper = intervals(lme3c)$fixed[7, 3], group = "IRI", p = round(summary(lme3c)$tTable[7, 5], 3)))
+data_corr_ah <- rbind(data_corr_ah, data.frame(scale = "IRI-PT", beta = intervals(lme2c)$fixed[7, 2], lower = intervals(lme2c)$fixed[7, 1], upper = intervals(lme2c)$fixed[7, 3], group = "IRI", p = round(summary(lme2c)$tTable[7, 5], 3)))
+data_corr_ah <- rbind(data_corr_ah, data.frame(scale = "IRI-EC", beta = intervals(lme1c)$fixed[7, 2], lower = intervals(lme1c)$fixed[7, 1], upper = intervals(lme1c)$fixed[7, 3], group = "IRI", p = round(summary(lme1c)$tTable[7, 5], 3)))
+data_corr_ah <- data_corr_ah[c(9:1), ] # Reverse order
+
+pdf("Fig_EMG4c.pdf", width = 7, height = 5)
+par(mar=c(5.1, 5.4, 4, 14))
+plot(x = data_corr_ah$beta, y = c(12:9, 7, 5, 3:1), xlab = expression(beta), ylab = "", frame.plot = F, xlim = c(min(data_corr_ah$lower), max(data_corr_ah$upper)), xaxt = "n", yaxt = "n")
+title("Corrugator, happy vs angry", line = 2)
+abline(v = 0, col = "gray")
+axis(1, at = c(-0.05, 0, 0.05), labels = c(-0.05, 0, 0.05))
+points(x = data_corr_ah$beta, y = c(12:9, 7, 5, 3:1), pch = 16)
+arrows(data_corr_ah$lower, c(12:9, 7, 5, 3:1), data_corr_ah$upper, c(12:9, 7, 5, 3:1), length = 0, lwd = 1.5)
+par(las=1)
+mtext(side = 2, at = c(12:9, 7, 5, 3:1), text = c("IRI-EC", " IRI-PT", "IRI-PD", "IRI-F", "STAI-T", "TAS-20", "PPI-R-SCI", "PPI-R-FD", "PPI-R-C"), line = 1)
+mtext(side = 4, at = 13, text = expression(beta), line = 1)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_corr_ah$beta, 2), line = 1)
+mtext(side = 4, at = 13, text = "95 % CI", line = 4)
+CI <- paste("[", round(data_corr_ah$lower, 2), ", ", round(data_corr_ah$upper, 2), "]", sep = "")
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = CI, line = 4)
+mtext(side = 4, at = 13, text = expression(italic(p)), line = 10)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_corr_ah$p, line = 10)
 dev.off()
 
 
@@ -619,13 +664,11 @@ EMGEventData2$IRI_EC_z <- scale(EMGEventData2$IRI_EC)
 
 # Build model
 lmezyg1 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = EMGEventData2, random = ~1|Subject, na.action = na.omit)
-lmezyg1b <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = subset(EMGEventData2, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
+lmezyg1c <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_EC_z) + Wave, data = subset(EMGEventData2, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 plot(lmezyg1)
 summary(lmezyg1)
 intervals(lmezyg1)
-
-summary(lmezyg1b)
 
 effzyg1 <- effect("Treatment*Stimulus", lmezyg1)
 
@@ -668,6 +711,7 @@ lmezyg2 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_PT_z) + Wave, data = EMG
 plot(lmezyg2)
 summary(lmezyg2)
 intervals(lmezyg2)
+lmezyg2c <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_PT_z) + Wave, data = subset(EMGEventData2, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # IRI-PD
 EMGEventData2$IRI_PD_z <- scale(EMGEventData2$IRI_PD)
@@ -675,6 +719,7 @@ lmezyg3 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_PD_z) + Wave, data = EMG
 plot(lmezyg3)
 summary(lmezyg3)
 intervals(lmezyg3)
+lmezyg3c <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_PD_z) + Wave, data = subset(EMGEventData2, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # IRI-F
 EMGEventData2$IRI_F_z <- scale(EMGEventData2$IRI_F)
@@ -682,6 +727,7 @@ lmezyg4 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_F_z) + Wave, data = EMGE
 plot(lmezyg4)
 summary(lmezyg4)
 intervals(lmezyg4)
+lmezyg4c <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + IRI_F_z) + Wave, data = subset(EMGEventData2, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # STAI-T
 EMGEventData2$STAI.T_z <- scale(EMGEventData2$STAI.T)
@@ -689,6 +735,7 @@ lmezyg5 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + STAI.T_z) + Wave, data = EMG
 plot(lmezyg5)
 summary(lmezyg5)
 intervals(lmezyg5)
+lmezyg5c <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + STAI.T_z) + Wave, data = subset(EMGEventData2, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # TAS-20
 EMGEventData2$TAS.20_z <- scale(EMGEventData2$TAS.20)
@@ -696,6 +743,7 @@ lmezyg6 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + TAS.20_z) + Wave, data = EMG
 plot(lmezyg6)
 summary(lmezyg6)
 intervals(lmezyg6)
+lmezyg6c <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + TAS.20_z) + Wave, data = subset(EMGEventData2, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # PPI-R-SCI
 EMGEventData2$PPI_SCI_z <- EMGEventData2$PPI_1_SCI_R
@@ -705,6 +753,7 @@ lmezyg7 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + PPI_SCI_z) + Wave, data = EM
 plot(lmezyg7)
 summary(lmezyg7)
 intervals(lmezyg7)
+lmezyg7c <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + PPI_SCI_z) + Wave, data = subset(EMGEventData2, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # PPI-R-FD
 EMGEventData2$PPI_FD_z <- EMGEventData2$PPI_1_FD_R
@@ -714,6 +763,7 @@ lmezyg8 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + PPI_FD_z) + Wave, data = EMG
 plot(lmezyg8)
 summary(lmezyg8)
 intervals(lmezyg8)
+lmezyg8c <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + PPI_FD_z) + Wave, data = subset(EMGEventData2, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # PPI-R-C
 EMGEventData2$PPI_C_z <- EMGEventData2$PPI_1_C_R
@@ -723,6 +773,7 @@ lmezyg9 <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + PPI_C_z) + Wave, data = EMGE
 plot(lmezyg9)
 summary(lmezyg9)
 intervals(lmezyg9)
+lmezyg9c <- lme(EMG_zyg_mean ~ Stimulus*(Treatment + PPI_C_z) + Wave, data = subset(EMGEventData2, Stimulus %in% c("Angry", "Happy")), random = ~1|Subject, na.action = na.omit)
 
 # Plot effects of rating scales
 # Zygomatic responses to angry faces
@@ -787,6 +838,186 @@ mtext(side = 4, at = 13, text = expression(italic(p)), line = 10)
 mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_zyg_happy$p, line = 10)
 dev.off()
 
+# Zygomatic responses to angry faces
+data_zyg_ah <- data.frame(scale = "PPI-R-C", beta = intervals(lmezyg9c)$fixed[7, 2], lower = intervals(lmezyg9c)$fixed[7, 1], upper = intervals(lmezyg9c)$fixed[7, 3], group = "PPI", p = round(summary(lmezyg9c)$tTable[7, 5], 3))
+data_zyg_ah <- rbind(data_zyg_ah, data.frame(scale = "PPI-R-FD", beta = intervals(lmezyg8c)$fixed[7, 2], lower = intervals(lmezyg8c)$fixed[7, 1], upper = intervals(lmezyg8c)$fixed[7, 3], group = "PPI", p = round(summary(lmezyg8c)$tTable[7, 5], 3)))
+data_zyg_ah <- rbind(data_zyg_ah, data.frame(scale = "PPI-R-SCI", beta = intervals(lmezyg7c)$fixed[7, 2], lower = intervals(lmezyg7c)$fixed[7, 1], upper = intervals(lmezyg7c)$fixed[7, 3], group = "PPI", p = round(summary(lmezyg7c)$tTable[7, 5], 3)))
+data_zyg_ah <- rbind(data_zyg_ah, data.frame(scale = "TAS-20", beta = intervals(lmezyg6c)$fixed[7, 2], lower = intervals(lmezyg6c)$fixed[7, 1], upper = intervals(lmezyg6c)$fixed[7, 3], group = "TAS", p = round(summary(lmezyg6c)$tTable[7, 5], 3)))
+data_zyg_ah <- rbind(data_zyg_ah, data.frame(scale = "STAI-T", beta = intervals(lmezyg5c)$fixed[7, 2], lower = intervals(lmezyg5c)$fixed[7, 1], upper = intervals(lmezyg5c)$fixed[7, 3], group = "STAI", p = round(summary(lmezyg5c)$tTable[7, 5], 3)))
+data_zyg_ah <- rbind(data_zyg_ah, data.frame(scale = "IRI-F", beta = intervals(lmezyg4c)$fixed[7, 2], lower = intervals(lmezyg4c)$fixed[7, 1], upper = intervals(lmezyg4c)$fixed[7, 3], group = "IRI", p = round(summary(lmezyg4c)$tTable[7, 5], 3)))
+data_zyg_ah <- rbind(data_zyg_ah, data.frame(scale = "IRI-PD", beta = intervals(lmezyg3c)$fixed[7, 2], lower = intervals(lmezyg3c)$fixed[7, 1], upper = intervals(lmezyg3c)$fixed[7, 3], group = "IRI", p = round(summary(lmezyg3c)$tTable[7, 5], 3)))
+data_zyg_ah <- rbind(data_zyg_ah, data.frame(scale = "IRI-PT", beta = intervals(lmezyg2c)$fixed[7, 2], lower = intervals(lmezyg2c)$fixed[7, 1], upper = intervals(lmezyg2c)$fixed[7, 3], group = "IRI", p = round(summary(lmezyg2c)$tTable[7, 5], 3)))
+data_zyg_ah <- rbind(data_zyg_ah, data.frame(scale = "IRI-EC", beta = intervals(lmezyg1c)$fixed[7, 2], lower = intervals(lmezyg1c)$fixed[7, 1], upper = intervals(lmezyg1c)$fixed[7, 3], group = "IRI", p = round(summary(lmezyg1c)$tTable[7, 5], 3)))
+data_zyg_ah <- data_zyg_ah[c(9:1), ] # Reverse order
+
+pdf("Fig_EMG9c.pdf", width = 7, height = 5)
+par(mar=c(5.1, 5.4, 4, 14))
+plot(x = data_zyg_ah$beta, y = c(12:9, 7, 5, 3:1), xlab = expression(beta), ylab = "", frame.plot = F, xlim = c(min(data_zyg_ah$lower), max(data_zyg_ah$upper)), xaxt = "n", yaxt = "n")
+title("Zygomatic, happy vs angry", line = 2)
+abline(v = 0, col = "gray")
+axis(1, at = c(-0.05, 0, 0.05), labels = c(-0.05, 0, 0.05))
+points(x = data_zyg_ah$beta, y = c(12:9, 7, 5, 3:1), pch = 16)
+arrows(data_zyg_ah$lower, c(12:9, 7, 5, 3:1), data_zyg_ah$upper, c(12:9, 7, 5, 3:1), length = 0, lwd = 1.5)
+par(las=1)
+mtext(side = 2, at = c(12:9, 7, 5, 3:1), text = c("IRI-EC", " IRI-PT", "IRI-PD", "IRI-F", "STAI-T", "TAS-20", "PPI-R-SCI", "PPI-R-FD", "PPI-R-C"), line = 1)
+mtext(side = 4, at = 13, text = expression(beta), line = 1)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_zyg_ah$beta, 2), line = 1)
+mtext(side = 4, at = 13, text = "95 % CI", line = 4)
+CI <- paste("[", round(data_zyg_ah$lower, 2), ", ", round(data_zyg_ah$upper, 2), "]", sep = "")
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = CI, line = 4)
+mtext(side = 4, at = 13, text = expression(italic(p)), line = 10)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_zyg_ah$p, line = 10)
+dev.off()
+
 # Write regression output tables
 write.csv(summary(lme1b)$tTable, file = "Corr_unadjusted.csv")
 write.csv(summary(lme1)$tTable, file = "Corr_IRI_EC.csv")
+
+# Make new figures for final publication
+pdf("Fig_EMG1a.pdf", height = 8, width = 4*1.61)
+par(mfrow=c(2,1))
+par(mar=c(4.5, 4.5, 0, 0))
+plot(MeanEMGCorrAngryWave1, type = "n", col = col4, frame.plot = F, main = "", xlab = "", ylab = "EMG (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.85, 1.2))
+rect(2, 0.000001, 4, 10, col = "gray88", border = NA)
+abline(v = c(0, 2, 6), lty = 3, lwd = 2)
+axis(1)
+axis(2, at = c(0.9, 1, 1.1, 1.2))
+lines(lowess(MeanEMGCorrAngryWave1, f = 0.1), col = col4, lwd = 2, lty = 6)
+lines(lowess(MeanEMGCorrHappyWave1, f = 0.1), col = col7, lwd = 2, lty = 1)
+lines(lowess(MeanEMGCorrNeutralWave1, f= 0.1), col = col8, lwd = 2, lty = 2)
+legend("topleft", col = c(col4, col7, col8), legend = c("Angry", "Happy", "Neutral"), lty = c(6, 1, 2), lwd = 2, bty = "n")
+
+plot(MeanEMGCorrAngryWave2, type = "n", col = col4, frame.plot = F, main = "", xlab = "Time (s)", ylab = "EMG (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.85, 1.2))
+rect(2, 0.000001, 4, 10, col = "gray88", border = NA)
+abline(v = c(0, 2, 4), lty = 3, lwd = 2)
+axis(1)
+axis(2, at = c(0.9, 1, 1.1, 1.2))
+lines(lowess(MeanEMGCorrAngryWave2, f = 0.1), col = col4, lwd = 2, lty = 6)
+lines(lowess(MeanEMGCorrHappyWave2, f = 0.1), col = col7, lwd = 2, lty = 1)
+lines(lowess(MeanEMGCorrNeutralWave2, f = 0.1), col = col8, lwd = 2, lty = 2)
+dev.off()
+
+pdf("Fig_EMG2a.pdf", height = 4, width = 4*1.61)
+par(mar=c(4.5, 4.5, 0, 0))
+plot(c(eff1$fit[1], eff1$fit[2], eff1$fit[3]),
+     type = "b",
+     frame.plot = F,
+     ylab = "EMG (log ratio)",
+     xlab = "Stimulus type",
+     xaxt = "n",
+     yaxt = "n",
+     xlim = c(1, 3.1),
+     ylim = c(-0.2, 0.1),
+     col = col1,
+     main = "",
+)
+lines(c(1, 1), c(eff1$upper[1], eff1$lower[1]), col = col1)
+lines(c(2, 2), c(eff1$upper[2], eff1$lower[2]), col = col1)
+lines(c(3, 3), c(eff1$upper[3], eff1$lower[3]), col = col1)
+lines(c(1.1, 2.1, 3.1), c(eff1$fit[4], eff1$fit[5], eff1$fit[6]), type = "b", col = col2, pch = 16)
+lines(c(1.1, 1.1), c(eff1$upper[4], eff1$lower[4]), col = col2)
+lines(c(2.1, 2.1), c(eff1$upper[5], eff1$lower[5]), col = col2)
+lines(c(3.1, 3.1), c(eff1$upper[6], eff1$lower[6]), col = col2)
+axis(1, at = c(1.05, 2.05, 3.05), labels = c("Neutral", "Angry", "Happy"))
+axis(2, at = c(-0.2, -0.1, 0, 0.1))
+legend("topright", col = c(col1, col2), pch = c(1, 16), legend = c("Placebo", "Oxazepam"), bty = "n", lty = 1)
+dev.off()
+
+
+pdf("Fig_EMG3a.pdf", height = 8, width = 4*1.61)
+par(mfrow=c(2,1))
+par(mar=c(4.5, 4.5, 0, 0))
+plot(MeanEMGzygAngryWave1, type = "n", col = col4, frame.plot = F, xlab = "", ylab = "EMG (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.9, 1.45))
+rect(2, 0.000001, 4, 10, col = "gray88", border = NA)
+abline(v = c(0, 2, 6), lty = 3, lwd = 2)
+axis(1)
+axis(2, at = c(0.9, 1, 1.1, 1.2, 1.3, 1.4))
+lines(lowess(MeanEMGzygAngryWave1, f = 0.1), col = col4, lwd = 2, lty = 6)
+lines(lowess(MeanEMGzygHappyWave1, f = 0.1), col = col7, lwd = 2, lty = 1)
+lines(lowess(MeanEMGzygNeutralWave1, f = 0.1), col = col8, lwd = 2, lty = 2)
+legend("topleft", lty = c(6, 1, 2), col = c(col4, col7, col8), legend = c("Angry", "Happy", "Neutral"), bty = "n", lwd = 2)
+
+plot(MeanEMGzygAngryWave2, type = "n", col = col4, frame.plot = F, xlab = "Time (s)", ylab = "EMG (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.9, 1.45))
+rect(2, 0.000001, 4, 10, col = "gray88", border = NA)
+abline(v = c(0, 2, 4), lty = 3, lwd = 2)
+axis(1)
+axis(2, at = c(0.9, 1, 1.1, 1.2, 1.3, 1.4))
+lines(lowess(MeanEMGzygAngryWave2, f = 0.1), col = col4, lwd = 2, lty = 6)
+lines(lowess(MeanEMGzygHappyWave2, f = 0.1), col = col7, lwd = 2, lty = 1)
+lines(lowess(MeanEMGzygNeutralWave2, f = 0.1), col = col8, lwd = 2, lty = 2)
+dev.off()
+
+pdf("Fig_EMG4a.pdf", height = 5, width = 7)
+par(mar=c(4.5, 4.5, 0, 0))
+plot(c(effzyg1$fit[1], effzyg1$fit[3], effzyg1$fit[5]),
+     type = "b",
+     frame.plot = F,
+     ylab = "EMG (ratio)",
+     xlab = "Stimulus type",
+     xaxt = "n",
+     yaxt = "n",
+     xlim = c(1, 3.1),
+     ylim = c(-0.2, 0.15),
+     col = col1,
+     main = ""
+)
+lines(c(1, 1), c(effzyg1$upper[1], effzyg1$lower[1]), col = col1)
+lines(c(2, 2), c(effzyg1$upper[3], effzyg1$lower[3]), col = col1)
+lines(c(3, 3), c(effzyg1$upper[5], effzyg1$lower[5]), col = col1)
+lines(c(1.1, 2.1, 3.1), c(effzyg1$fit[2], effzyg1$fit[4], effzyg1$fit[6]), type = "b", col = col2, pch = 16)
+lines(c(1.1, 1.1), c(effzyg1$upper[2], effzyg1$lower[2]), col = col2)
+lines(c(2.1, 2.1), c(effzyg1$upper[4], effzyg1$lower[4]), col = col2)
+lines(c(3.1, 3.1), c(effzyg1$upper[6], effzyg1$lower[6]), col = col2)
+axis(1, at = c(1.05, 2.05, 3.05), labels = c("Neutral", "Angry", "Happy"))
+axis(2, at = c(-0.2, -0.1, 0, 0.1))
+legend("topleft", col = c(col1, col2), pch = c(1, 16), legend = c("Placebo", "Oxazepam"), bty = "n", lty = 1)
+dev.off()
+
+
+# Yet a new version of figures for publication
+pdf("Fig_EMG1b.pdf", height = 7.0866*1.4/3, width = 7.0866*1.4)
+par(mfrow=c(1,3))
+par(mar=c(4.5, 4.5, 1, 1))
+plot(MeanEMGCorrAngryWave1, type = "n", col = col4, frame.plot = F, main = "", xlab = "Time (s)", ylab = "EMG (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.85, 1.2))
+rect(2, 0.000001, 4, 10, col = "gray88", border = NA)
+abline(v = c(0, 2, 5), lty = 3)
+legend("topleft", lty = 1, col = c(col4, col7, col8), legend = c("Angry", "Happy", "Neutral"), lwd = 2, box.lty = 0, bg = "white")
+axis(1)
+axis(2, at = c(0.9, 1, 1.1, 1.2))
+lines(lowess(MeanEMGCorrAngryWave1, f = 0.1), col = col4, lwd = 2)
+lines(lowess(MeanEMGCorrHappyWave1, f = 0.1), col = col7, lwd = 2)
+lines(lowess(MeanEMGCorrNeutralWave1, f= 0.1), col = col8, lwd = 2)
+
+plot(MeanEMGCorrAngryWave2, type = "n", col = col4, frame.plot = F, main = "", xlab = "Time (s)", ylab = "EMG (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.85, 1.2))
+rect(2, 0.000001, 4, 10, col = "gray88", border = NA)
+abline(v = c(0, 2, 4), lty = 3)
+legend("topleft", lty = 1, col = c(col4, col7, col8), legend = c("Angry", "Happy", "Neutral"), lwd = 2, box.lty = 0, bg = "white")
+axis(1)
+axis(2, at = c(0.9, 1, 1.1, 1.2))
+lines(lowess(MeanEMGCorrAngryWave2, f = 0.1), col = col4, lwd = 2)
+lines(lowess(MeanEMGCorrHappyWave2, f = 0.1), col = col7, lwd = 2)
+lines(lowess(MeanEMGCorrNeutralWave2, f = 0.1), col = col8, lwd = 2)
+
+plot(c(eff1$fit[1], eff1$fit[2], eff1$fit[3]),
+     type = "b",
+     frame.plot = F,
+     ylab = "EMG (log ratio)",
+     xlab = "Stimulus type",
+     xaxt = "n",
+     yaxt = "n",
+     xlim = c(1, 3.1),
+     ylim = c(-0.2, 0.1),
+     col = col1,
+     main = "",
+)
+lines(c(1, 1), c(eff1$upper[1], eff1$lower[1]), col = col1)
+lines(c(2, 2), c(eff1$upper[2], eff1$lower[2]), col = col1)
+lines(c(3, 3), c(eff1$upper[3], eff1$lower[3]), col = col1)
+lines(c(1.1, 2.1, 3.1), c(eff1$fit[4], eff1$fit[5], eff1$fit[6]), type = "b", col = col2, pch = 16)
+lines(c(1.1, 1.1), c(eff1$upper[4], eff1$lower[4]), col = col2)
+lines(c(2.1, 2.1), c(eff1$upper[5], eff1$lower[5]), col = col2)
+lines(c(3.1, 3.1), c(eff1$upper[6], eff1$lower[6]), col = col2)
+axis(1, at = c(1.05, 2.05, 3.05), labels = c("Neutral", "Angry", "Happy"))
+axis(2, at = c(-0.2, -0.1, 0, 0.1))
+legend("topright", col = c(col1, col2), pch = c(1, 16), legend = c("Placebo", "Oxazepam"), bty = "n", lty = 1)
+dev.off()
