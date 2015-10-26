@@ -159,6 +159,7 @@ STAISData$FirstOrSecond <- c(rep.int(1, 0.5*length(STAISData$Subject)), rep.int(
 STAISData$STAIS <- NA # Make new column for STAI-S rating, then fill it with values for the first and second ratings, respectively
 STAISData$STAIS[STAISData$FirstOrSecond == 1] <- STAISData$STAI.S[STAISData$FirstOrSecond == 1]
 STAISData$STAIS[STAISData$FirstOrSecond == 2] <- STAISData$STAI.S.Scrambled[STAISData$FirstOrSecond == 2]
+STAISData$Treatment <- relevel(STAISData$Treatment, ref = "Placebo")
 
 lme1 <- lme(STAIS ~ Treatment * FirstOrSecond + Wave, data = STAISData, random = ~1|Subject, na.action = na.omit)
 summary(lme1)
