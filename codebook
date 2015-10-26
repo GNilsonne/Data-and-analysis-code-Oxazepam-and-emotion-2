@@ -1,0 +1,24 @@
+This is a codebook for the different data files in this repository.
+
+1. Physiological recordings (files in FMOV folder)
+These files contain recordings made using the Acqknowledge software and exported to text files. They have different numbers of columns depending on when in the experiment they were 
+Files that have 8 columns have the following data in each column:
+  Skin conductance, umho
+  Raw EMG of the major zygomatic muscle, mV
+  Raw EMG of the superciliary corrugator muscle, mV
+  Average rectified EMG of the major zygomatic muscle, mV
+  Average rectified EMG of the superciliary corrugator muscle, mV
+  Reference wave for image stimulus onset, angry
+  Reference wave for image stimulus onset, happy
+  Reference wave for image stimulus onset, neutral
+Files that have 10 columns have the following data in each column:
+  Time (minutes)
+  Skin conductance, umho
+  Raw EMG of the major zygomatic muscle, mV
+  EKG, mV
+  Raw EMG of the superciliary corrugator muscle, mV
+  Average rectified EMG of the major zygomatic muscle, mV
+  Average rectified EMG of the superciliary corrugator muscle, mV
+  Reference wave for image stimulus onset, angry
+  Reference wave for image stimulus onset, happy
+  Reference wave for image stimulus onset, neutral
