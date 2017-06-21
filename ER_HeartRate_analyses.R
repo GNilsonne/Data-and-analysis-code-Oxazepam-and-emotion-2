@@ -25,12 +25,8 @@ demDataURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analy
 demData <- read.csv(text = demDataURL)
 
 # Then the preprocessed heart rate data
-MeanTimecoursesURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analysis-code-Oxazepam-and-emotion-2/master/MeanTimecoursesHR_ER.csv", ssl.verifypeer = FALSE)
-mean_timecourses_hr <- read.csv(text = MeanTimecoursesURL)
-
-EventDataURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analysis-code-Oxazepam-and-emotion-2/master/HeartRateEventData_ER.csv", ssl.verifypeer = FALSE)
-hr_event_data <- read.csv(text = EventDataURL)
-
+mean_timecourses_hr <- read.csv("MeanTimecoursesHR_ER.csv")
+hr_event_data <- read.csv("HeartRateEventData_ER.csv")
 
 # Analyse data
 
@@ -64,6 +60,9 @@ hr_event_data$Subject <- as.factor(hr_event_data$Subject)
 hr_event_data$Treatment <- relevel(hr_event_data$Treatment, ref = "Placebo")
 hr_event_data$instruction <- relevel(hr_event_data$instruction, ref = "Downregulate")
 hr_event_data$valence <- relevel(hr_event_data$valence, ref = "Neutral")
+contrasts(hr_event_data$instruction) <- c(-0.5, 0.5) 
+contrasts(hr_event_data$valence) <- c(-0.5, 0.5) 
+contrasts(hr_event_data$Treatment) <- c(-0.5, 0.5) 
 
 # Build model
 lme1 <- lme(sqrt_hr_mean_stimulus2 ~ instruction*valence*Treatment, data = hr_event_data, random = ~1|Subject, na.action = na.omit)

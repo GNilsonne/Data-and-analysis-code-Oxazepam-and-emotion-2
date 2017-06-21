@@ -25,12 +25,8 @@ demDataURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analy
 demData <- read.csv(text = demDataURL)
 
 # Then the preprocessed EMG data
-MeanTimecoursesURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analysis-code-Oxazepam-and-emotion-2/master/MeanTimecoursesCorrugator_ER.csv", ssl.verifypeer = FALSE)
-MeanTimecourses <- read.csv(text = MeanTimecoursesURL)
-
-EventDataURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analysis-code-Oxazepam-and-emotion-2/master/CorrugatorEventData_ER.csv", ssl.verifypeer = FALSE)
-emg_event_data <- read.csv(text = EventDataURL)
-
+MeanTimecourses <- read.csv("MeanTimecoursesCorrugator_ER.csv")
+emg_event_data <- read.csv("CorrugatorEventData_ER.csv")
 
 # Analyse data
 
@@ -77,6 +73,9 @@ emg_event_data$Subject <- as.factor(emg_event_data$Subject)
 emg_event_data$Treatment <- relevel(emg_event_data$Treatment, ref = "Placebo")
 emg_event_data$instruction <- relevel(emg_event_data$instruction, ref = "Downregulate")
 emg_event_data$valence <- relevel(emg_event_data$valence, ref = "Neutral")
+contrasts(emg_event_data$instruction) <- c(-0.5, 0.5) 
+contrasts(emg_event_data$valence) <- c(-0.5, 0.5) 
+contrasts(emg_event_data$Treatment) <- c(-0.5, 0.5) 
 
 # Build model
 lme1 <- lme(log_emg_corr_mean_stimulus ~ instruction*valence*Treatment, data = emg_event_data, random = ~1|Subject, na.action = na.omit)

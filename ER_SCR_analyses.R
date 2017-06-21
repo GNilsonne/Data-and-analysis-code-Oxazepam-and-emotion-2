@@ -25,15 +25,11 @@ demDataURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analy
 demData <- read.csv(text = demDataURL)
 
 # Then the preprocessed SCR data
-MeanTimecoursesURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analysis-code-Oxazepam-and-emotion-2/master/MeanTimecoursesSCR_ER.csv", ssl.verifypeer = FALSE)
-MeanTimecourses <- read.csv(text = MeanTimecoursesURL)
-
-EventDataURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analysis-code-Oxazepam-and-emotion-2/master/SCREventData_ER.csv", ssl.verifypeer = FALSE)
-SCR_event_data <- read.csv(text = EventDataURL)
+MeanTimecourses <- read.csv("MeanTimecoursesSCR_ER.csv")
+SCR_event_data <- read.csv("SCREventData_ER.csv")
 
 
 # Analyse data
-
 # Make figures
 pdf("Fig_SCR_ER1.pdf", width = 7, height = 5)
 plot(MeanTimecourses$down_neg ~ MeanTimecourses$time_s, type = "n", frame.plot = F, main = "Skin conductance responses, Neutral stimuli", xlab = "Time (s)", ylab = "EMG (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.998, 1.02))
@@ -77,6 +73,10 @@ SCR_event_data$Subject <- as.factor(SCR_event_data$Subject)
 SCR_event_data$Treatment <- relevel(SCR_event_data$Treatment, ref = "Placebo")
 SCR_event_data$instruction <- relevel(SCR_event_data$instruction, ref = "Downregulate")
 SCR_event_data$valence <- relevel(SCR_event_data$valence, ref = "Neutral")
+contrasts(SCR_event_data$instruction) <- c(-0.5, 0.5) 
+contrasts(SCR_event_data$valence) <- c(-0.5, 0.5) 
+contrasts(SCR_event_data$Treatment) <- c(-0.5, 0.5) 
+
 
 # Build model
 lme1 <- lme(log_SCR_mean_stimulus ~ instruction*valence*Treatment, data = SCR_event_data, random = ~1|Subject, na.action = na.omit)
@@ -100,7 +100,7 @@ plot(c(eff1$fit[1], eff1$fit[2]),
      xlim = c(1, 2.1),
      ylim = c(-0.01, 0.02),
      col = col1,
-     main = "Skin conductance responses, neutral stimuli",
+     main = "Skin conductance responses, neutral stimuli"
 )
 lines(c(1, 1), c(eff1$upper[1], eff1$lower[1]), col = col1)
 lines(c(2, 2), c(eff1$upper[2], eff1$lower[2]), col = col1)
@@ -123,7 +123,7 @@ plot(c(eff1$fit[3], eff1$fit[4]),
      xlim = c(1, 2.1),
      ylim = c(-0.01, 0.02),
      col = col1,
-     main = "Skin conductance responses, negative stimuli",
+     main = "Skin conductance responses, negative stimuli"
 )
 lines(c(1, 1), c(eff1$upper[3], eff1$lower[3]), col = col1)
 lines(c(2, 2), c(eff1$upper[4], eff1$lower[4]), col = col1)
@@ -307,13 +307,3 @@ write.csv(summary(lme6)$tTable, file = "Corr_TAS_20.csv")
 write.csv(summary(lme7)$tTable, file = "Corr_PPI_R_SCI.csv")
 write.csv(summary(lme8)$tTable, file = "Corr_PPI_R_FD.csv")
 write.csv(summary(lme9)$tTable, file = "Corr_PPI_R_C.csv")
-
-# Calculate a response index for each participant and write
-Corr_agg <- aggregate(CorrugatorEventData[, c("SCR_mean", "Subject", "Stimulus")], list(Subject = CorrugatorEventData$Subject, Stimulus = CorrugatorEventData$Stimulus), FUN = "mean")
-Zyg_agg <- aggregate(ZygomaticEventData[, c("EMG_zyg_mean", "Subject", "Stimulus")], list(Subject = ZygomaticEventData$Subject, Stimulus = ZygomaticEventData$Stimulus), FUN = "mean")
-IndividualResponses <- data.frame(Subject = Corr_agg$Subject[Corr_agg$Stimulus == "Angry"], 
-                                  CorrAngry = Corr_agg$SCR_mean[Corr_agg$Stimulus == "Angry"] - Corr_agg$SCR_mean[Corr_agg$Stimulus == "Neutral"],
-                                  CorrHappy = Corr_agg$SCR_mean[Corr_agg$Stimulus == "Happy"] - Corr_agg$SCR_mean[Corr_agg$Stimulus == "Neutral"],
-                                  ZygAngry = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Angry"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"],
-                                  ZygHappy = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Happy"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"])
-write.csv(IndividualResponses, file = "IndividualResponsesFMOV.csv", row.names = FALSE)

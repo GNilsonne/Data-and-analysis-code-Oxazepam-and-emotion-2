@@ -18,19 +18,22 @@ col7 = brewer.pal(8, "Dark2")[7]
 col8 = brewer.pal(8, "Dark2")[8]
 
 # Read data
-RatingsDataURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analysis-code-Oxazepam-and-emotion-2/master/RatingsData_ER.csv", ssl.verifypeer = FALSE)
-RatingsData <- read.csv(text = RatingsDataURL)
+RatingsData <- read.csv("RatingsData_ER.csv")
 
 demDataURL <- getURL("https://raw.githubusercontent.com/GNilsonne/Data-and-analysis-code-Oxazepam-and-emotion/master/demographics.csv", ssl.verifypeer = FALSE)
 demData <- read.csv(text = demDataURL)
 
 data <- merge(RatingsData, demData, by = "Subject")
 
+# Set up contrasts
 data$Subject <- as.factor(data$Subject)
 data$Treatment <- as.factor(data$Treatment)
 data$Treatment <- relevel(data$Treatment, ref = "Placebo")
 data$instruction <- relevel(data$instruction, ref = "Downregulate")
 data$valence <- relevel(data$valence, ref = "Neutral")
+contrasts(data$instruction) <- c(-0.5, 0.5) 
+contrasts(data$valence) <- c(-0.5, 0.5) 
+contrasts(data$Treatment) <- c(-0.5, 0.5) 
 
 # Plot data
 boxplot(RatedUnpleasantness ~ valence*instruction*Treatment, data = data, border = c(col3, col3, col4, col4, col3, col3, col4, col4), names = c("Neu Pl", "Neg Pl", "Neu Pl", "Neg Pl", "Neu Ox", "Neg Ox", "Neu Ox", "Neg Ox"))
@@ -55,7 +58,7 @@ plot(c(eff1$fit[1], eff1$fit[2]),
      xlim = c(1, 2.1),
      ylim = c(0, 60),
      col = col1,
-     main = "Rated unpleasantness, neutral stimuli",
+     main = "Rated unpleasantness, neutral stimuli"
 )
 lines(c(1, 1), c(eff1$upper[1], eff1$lower[1]), col = col1)
 lines(c(2, 2), c(eff1$upper[2], eff1$lower[2]), col = col1)
@@ -78,7 +81,7 @@ plot(c(eff1$fit[3], eff1$fit[4]),
      xlim = c(1, 2.1),
      ylim = c(0, 60),
      col = col1,
-     main = "Rated unpleasantness, negative stimuli",
+     main = "Rated unpleasantness, negative stimuli"
 )
 lines(c(1, 1), c(eff1$upper[3], eff1$lower[3]), col = col1)
 lines(c(2, 2), c(eff1$upper[4], eff1$lower[4]), col = col1)
@@ -262,16 +265,3 @@ write.csv(summary(lme6)$tTable, file = "Corr_TAS_20.csv")
 write.csv(summary(lme7)$tTable, file = "Corr_PPI_R_SCI.csv")
 write.csv(summary(lme8)$tTable, file = "Corr_PPI_R_FD.csv")
 write.csv(summary(lme9)$tTable, file = "Corr_PPI_R_C.csv")
-
-# Calculate a response index for each participant and write
-Corr_agg <- aggregate(CorrugatorEventData[, c("EMG_corr_mean", "Subject", "Stimulus")], list(Subject = CorrugatorEventData$Subject, Stimulus = CorrugatorEventData$Stimulus), FUN = "mean")
-Zyg_agg <- aggregate(ZygomaticEventData[, c("EMG_zyg_mean", "Subject", "Stimulus")], list(Subject = ZygomaticEventData$Subject, Stimulus = ZygomaticEventData$Stimulus), FUN = "mean")
-IndividualResponses <- data.frame(Subject = Corr_agg$Subject[Corr_agg$Stimulus == "Angry"], 
-                                  CorrAngry = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Angry"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
-                                  CorrHappy = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Happy"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
-                                  CorrAH = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Happy"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Angry"],
-                                  ZygAngry = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Angry"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"],
-                                  ZygHappy = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Happy"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"],
-                                  ZygAH = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Happy"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Angry"]
-)
-write.csv(IndividualResponses, file = "IndividualResponsesFMOV.csv", row.names = FALSE)
