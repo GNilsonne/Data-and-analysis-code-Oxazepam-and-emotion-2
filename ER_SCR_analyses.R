@@ -143,62 +143,62 @@ plot(effect("instruction*valence*Treatment", lme1))
 # Since oxazepam had no significant effect, we remove it from the model
 
 # IRI-EC
-emg_event_data$IRI_EC_z <- scale(emg_event_data$IRI_EC)
-lme1d <- lme(log_SCR_mean_stimulus ~ instruction*valence + IRI_EC_z*instruction + IRI_EC_z*valence, data = emg_event_data, random = ~1|Subject, na.action = na.omit)
+SCR_event_data$IRI_EC_z <- scale(SCR_event_data$IRI_EC)
+lme1d <- lme(log_SCR_mean_stimulus ~ instruction*valence + IRI_EC_z*instruction + IRI_EC_z*valence, data = SCR_event_data, random = ~1|Subject, na.action = na.omit)
 plot(lme1d)
 summary(lme1d)
 
 # IRI-PT
-emg_event_data$IRI_PT_z <- scale(emg_event_data$IRI_PT)
-lme2 <- lme(log_SCR_mean_stimulus ~ instruction*valence + IRI_PT_z*instruction + IRI_PT_z*valence, data = emg_event_data, random = ~1|Subject, na.action = na.omit)
+SCR_event_data$IRI_PT_z <- scale(SCR_event_data$IRI_PT)
+lme2 <- lme(log_SCR_mean_stimulus ~ instruction*valence + IRI_PT_z*instruction + IRI_PT_z*valence, data = SCR_event_data, random = ~1|Subject, na.action = na.omit)
 plot(lme2)
 summary(lme2)
 
 # IRI-PD
-emg_event_data$IRI_PD_z <- scale(emg_event_data$IRI_PD)
-lme3 <- lme(log_SCR_mean_stimulus ~ instruction*valence + IRI_PD_z*instruction + IRI_PD_z*valence, data = emg_event_data, random = ~1|Subject, na.action = na.omit)
+SCR_event_data$IRI_PD_z <- scale(SCR_event_data$IRI_PD)
+lme3 <- lme(log_SCR_mean_stimulus ~ instruction*valence + IRI_PD_z*instruction + IRI_PD_z*valence, data = SCR_event_data, random = ~1|Subject, na.action = na.omit)
 plot(lme3)
 summary(lme3)
 
 # IRI-F
-emg_event_data$IRI_F_z <- scale(emg_event_data$IRI_F)
-lme4 <- lme(log_SCR_mean_stimulus ~ instruction*valence + IRI_F_z*instruction + IRI_F_z*valence, data = emg_event_data, random = ~1|Subject, na.action = na.omit)
+SCR_event_data$IRI_F_z <- scale(SCR_event_data$IRI_F)
+lme4 <- lme(log_SCR_mean_stimulus ~ instruction*valence + IRI_F_z*instruction + IRI_F_z*valence, data = SCR_event_data, random = ~1|Subject, na.action = na.omit)
 plot(lme4)
 summary(lme4)
 
 # STAI-T
-emg_event_data$STAI.T_z <- scale(emg_event_data$STAI.T)
-lme5 <- lme(log_SCR_mean_stimulus ~ instruction*valence + STAI.T_z*instruction + STAI.T_z*valence, data = emg_event_data, random = ~1|Subject, na.action = na.omit)
+SCR_event_data$STAI.T_z <- scale(SCR_event_data$STAI.T)
+lme5 <- lme(log_SCR_mean_stimulus ~ instruction*valence + STAI.T_z*instruction + STAI.T_z*valence, data = SCR_event_data, random = ~1|Subject, na.action = na.omit)
 plot(lme5)
 summary(lme5)
 
 # TAS-20
-emg_event_data$TAS.20_z <- scale(emg_event_data$TAS.20)
-lme6 <- lme(log_SCR_mean_stimulus ~ instruction*valence + TAS.20_z*instruction + TAS.20_z*valence, data = emg_event_data, random = ~1|Subject, na.action = na.omit)
+SCR_event_data$TAS.20_z <- scale(SCR_event_data$TAS.20)
+lme6 <- lme(log_SCR_mean_stimulus ~ instruction*valence + TAS.20_z*instruction + TAS.20_z*valence, data = SCR_event_data, random = ~1|Subject, na.action = na.omit)
 plot(lme6)
 summary(lme6)
 
 # PPI-R-SCI
-emg_event_data$PPI_SCI_z <- emg_event_data$PPI_1_SCI_R
-emg_event_data$PPI_SCI_z[emg_event_data$PPI_1_IR >= 45] <- NA # Exclude participants with too high scores on Inconsistent Responding measure
-emg_event_data$PPI_SCI_z <- scale(emg_event_data$PPI_SCI_z)
-lme7 <- lme(log_SCR_mean_stimulus ~ instruction*valence + PPI_SCI_z*instruction + PPI_SCI_z*valence, data = emg_event_data, random = ~1|Subject, na.action = na.omit)
+SCR_event_data$PPI_SCI_z <- SCR_event_data$PPI_1_SCI_R
+SCR_event_data$PPI_SCI_z[SCR_event_data$PPI_1_IR >= 45] <- NA # Exclude participants with too high scores on Inconsistent Responding measure
+SCR_event_data$PPI_SCI_z <- scale(SCR_event_data$PPI_SCI_z)
+lme7 <- lme(log_SCR_mean_stimulus ~ instruction*valence + PPI_SCI_z*instruction + PPI_SCI_z*valence, data = SCR_event_data, random = ~1|Subject, na.action = na.omit)
 plot(lme7)
 summary(lme7)
 
 # PPI-R-FD
-emg_event_data$PPI_FD_z <- emg_event_data$PPI_1_FD_R
-emg_event_data$PPI_FD_z[emg_event_data$PPI_1_IR >= 45] <- NA # Exclude participants with too high scores on Inconsistent Responding measure
-emg_event_data$PPI_FD_z <- scale(emg_event_data$PPI_FD_z)
-lme8 <- lme(log_SCR_mean_stimulus ~ instruction*valence + PPI_FD_z*instruction + PPI_FD_z*valence, data = emg_event_data, random = ~1|Subject, na.action = na.omit)
+SCR_event_data$PPI_FD_z <- SCR_event_data$PPI_1_FD_R
+SCR_event_data$PPI_FD_z[SCR_event_data$PPI_1_IR >= 45] <- NA # Exclude participants with too high scores on Inconsistent Responding measure
+SCR_event_data$PPI_FD_z <- scale(SCR_event_data$PPI_FD_z)
+lme8 <- lme(log_SCR_mean_stimulus ~ instruction*valence + PPI_FD_z*instruction + PPI_FD_z*valence, data = SCR_event_data, random = ~1|Subject, na.action = na.omit)
 plot(lme8)
 summary(lme8)
 
 # PPI-R-C
-emg_event_data$PPI_C_z <- emg_event_data$PPI_1_C_R
-emg_event_data$PPI_C_z[emg_event_data$PPI_1_IR >= 45] <- NA # Exclude participants with too high scores on Inconsistent Responding measure
-emg_event_data$PPI_C_z <- scale(emg_event_data$PPI_C_z)
-lme9 <- lme(log_SCR_mean_stimulus ~ instruction*valence + PPI_C_z*instruction + PPI_C_z*valence, data = emg_event_data, random = ~1|Subject, na.action = na.omit)
+SCR_event_data$PPI_C_z <- SCR_event_data$PPI_1_C_R
+SCR_event_data$PPI_C_z[SCR_event_data$PPI_1_IR >= 45] <- NA # Exclude participants with too high scores on Inconsistent Responding measure
+SCR_event_data$PPI_C_z <- scale(SCR_event_data$PPI_C_z)
+lme9 <- lme(log_SCR_mean_stimulus ~ instruction*valence + PPI_C_z*instruction + PPI_C_z*valence, data = SCR_event_data, random = ~1|Subject, na.action = na.omit)
 plot(lme9)
 summary(lme9)
 
@@ -215,10 +215,10 @@ data_corr_main <- rbind(data_corr_main, data.frame(scale = "IRI-PT", beta = inte
 data_corr_main <- rbind(data_corr_main, data.frame(scale = "IRI-EC", beta = intervals(lme1d)$fixed[4, 2], lower = intervals(lme1d)$fixed[4, 1], upper = intervals(lme1d)$fixed[4, 3], group = "IRI", p = round(summary(lme1d)$tTable[4, 5], 3)))
 data_corr_main <- data_corr_main[c(9:1), ] # Reverse order
 
-pdf("Fig_EMG_ER6.pdf", width = 7, height = 5)
+pdf("Fig_SCR_ER6.pdf", width = 7, height = 5)
 par(mar=c(5.1, 5.4, 4, 14))
 plot(x = data_corr_main$beta, y = c(12:9, 7, 5, 3:1), xlab = expression(beta), ylab = "", frame.plot = F, xlim = c(min(data_corr_main$lower), max(data_corr_main$upper)), xaxt = "n", yaxt = "n")
-title("Corrugator EMG, Main effects of personality measures", line = 2)
+title("Skin conductance, Main effects of personality measures", line = 2)
 abline(v = 0, col = "gray")
 axis(1, at = c(-0.1, 0, 0.1), labels = c(-0.1, 0, 0.1))
 points(x = data_corr_main$beta, y = c(12:9, 7, 5, 3:1), pch = 16)
@@ -246,20 +246,20 @@ data_corr_valence <- rbind(data_corr_valence, data.frame(scale = "IRI-PT", beta 
 data_corr_valence <- rbind(data_corr_valence, data.frame(scale = "IRI-EC", beta = intervals(lme1d)$fixed[7, 2], lower = intervals(lme1d)$fixed[7, 1], upper = intervals(lme1d)$fixed[7, 3], group = "IRI", p = round(summary(lme1d)$tTable[7, 5], 3)))
 data_corr_valence <- data_corr_valence[c(9:1), ] # Reverse order
 
-pdf("Fig_EMG5.pdf", width = 7, height = 5)
+pdf("Fig_SCR_ER7.pdf", width = 7, height = 5)
 par(mar=c(5.1, 5.4, 4, 14))
 plot(x = data_corr_valence$beta, y = c(12:9, 7, 5, 3:1), xlab = expression(beta), ylab = "", frame.plot = F, xlim = c(min(data_corr_valence$lower), max(data_corr_valence$upper)), xaxt = "n", yaxt = "n")
-title("Corrugator EMG, interaction with stimulus valence", line = 2)
+title("Skin conductance, interaction with stimulus valence", line = 2)
 abline(v = 0, col = "gray")
-axis(1, at = c(-0.08, 0, 0.08), labels = c(-0.08, 0, 0.08))
+axis(1, at = c(-0.006, 0, 0.006), labels = c(-0.006, 0, 0.006))
 points(x = data_corr_valence$beta, y = c(12:9, 7, 5, 3:1), pch = 16)
 arrows(data_corr_valence$lower, c(12:9, 7, 5, 3:1), data_corr_valence$upper, c(12:9, 7, 5, 3:1), length = 0, lwd = 1.5)
 par(las=1)
 mtext(side = 2, at = c(12:9, 7, 5, 3:1), text = c("IRI-EC", " IRI-PT", "IRI-PD", "IRI-F", "STAI-T", "TAS-20", "PPI-R-SCI", "PPI-R-FD", "PPI-R-C"), line = 1)
 mtext(side = 4, at = 13, text = expression(beta), line = 1)
-mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_corr_valence$beta, 2), line = 1)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_corr_valence$beta, 3), line = 1)
 mtext(side = 4, at = 13, text = "95 % CI", line = 4)
-CI <- paste("[", round(data_corr_valence$lower, 2), ", ", round(data_corr_valence$upper, 2), "]", sep = "")
+CI <- paste("[", round(data_corr_valence$lower, 3), ", ", round(data_corr_valence$upper, 3), "]", sep = "")
 mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = CI, line = 4)
 mtext(side = 4, at = 13, text = expression(italic(p)), line = 10)
 mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_corr_valence$p, line = 10)
@@ -277,20 +277,20 @@ data_corr_instruction <- rbind(data_corr_instruction, data.frame(scale = "IRI-PT
 data_corr_instruction <- rbind(data_corr_instruction, data.frame(scale = "IRI-EC", beta = intervals(lme1d)$fixed[6, 2], lower = intervals(lme1d)$fixed[6, 1], upper = intervals(lme1d)$fixed[6, 3], group = "IRI", p = round(summary(lme1d)$tTable[6, 5], 3)))
 data_corr_instruction <- data_corr_instruction[c(9:1), ] # Reverse order
 
-pdf("Fig_EMG5.pdf", width = 7, height = 5)
+pdf("Fig_SCR_ER8.pdf", width = 7, height = 5)
 par(mar=c(5.1, 5.4, 4, 14))
 plot(x = data_corr_instruction$beta, y = c(12:9, 7, 5, 3:1), xlab = expression(beta), ylab = "", frame.plot = F, xlim = c(min(data_corr_instruction$lower), max(data_corr_instruction$upper)), xaxt = "n", yaxt = "n")
-title("Corrugator EMG, interaction with instruction", line = 2)
+title("Skin conductance, interaction with instruction", line = 2)
 abline(v = 0, col = "gray")
-axis(1, at = c(-0.1, 0, 0.1), labels = c(-0.1, 0, 0.1))
+axis(1, at = c(-0.005, 0, 0.005), labels = c(-0.005, 0, 0.005))
 points(x = data_corr_instruction$beta, y = c(12:9, 7, 5, 3:1), pch = 16)
 arrows(data_corr_instruction$lower, c(12:9, 7, 5, 3:1), data_corr_instruction$upper, c(12:9, 7, 5, 3:1), length = 0, lwd = 1.5)
 par(las=1)
 mtext(side = 2, at = c(12:9, 7, 5, 3:1), text = c("IRI-EC", " IRI-PT", "IRI-PD", "IRI-F", "STAI-T", "TAS-20", "PPI-R-SCI", "PPI-R-FD", "PPI-R-C"), line = 1)
 mtext(side = 4, at = 13, text = expression(beta), line = 1)
-mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_corr_instruction$beta, 2), line = 1)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_corr_instruction$beta, 3), line = 1)
 mtext(side = 4, at = 13, text = "95 % CI", line = 4)
-CI <- paste("[", round(data_corr_instruction$lower, 2), ", ", round(data_corr_instruction$upper, 2), "]", sep = "")
+CI <- paste("[", round(data_corr_instruction$lower, 3), ", ", round(data_corr_instruction$upper, 3), "]", sep = "")
 mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = CI, line = 4)
 mtext(side = 4, at = 13, text = expression(italic(p)), line = 10)
 mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_corr_instruction$p, line = 10)
