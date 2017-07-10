@@ -54,17 +54,17 @@ lines(lowess(x = MeanTimecourses$time_s, y = MeanTimecourses$up_neg, f= 0.05), c
 legend("topleft", lty = c(1, 5), col = c(col3, col4), legend = c("Downregulate", "Upregulate"), lwd = 2, bty = "n")
 dev.off()
 
-# Compare to others' data
-Urry2009 <- read.csv("~/BeteendeforsokEmpati2011/Data-and-analysis-code-Oxazepam-and-emotion-2/Urry2009.csv", header=FALSE, dec=",")
-Urry2009$time <- seq(0, 7.75, 0.25)
-Urry2009$corr_emg_ratio <- 1 + Urry2009$V1
-
-pdf("Fig_EMG_ER3.pdf", width = 7, height = 5)
-plot(Urry2009$corr_emg_ratio ~ Urry2009$time, type = "l", frame.plot= F, lwd = 2, main = "Upregulate negative", xlab = "time (s)", ylab = "EMG (ratio)", col = col5)
-abline(v = c(0, 2, 3), lty = 3)
-lines(lowess(x = MeanTimecourses$time_s, y = MeanTimecourses$up_neg, f= 0.05), col = col4, lwd = 2)
-legend("bottomright", lty = 1, lwd = 2, col = c(col5, col4), legend = c("Urry2009", "Nilsonne2015"), bty = "n")
-dev.off()
+# # Compare to others' data
+# Urry2009 <- read.csv("~/BeteendeforsokEmpati2011/Data-and-analysis-code-Oxazepam-and-emotion-2/Urry2009.csv", header=FALSE, dec=",")
+# Urry2009$time <- seq(0, 7.75, 0.25)
+# Urry2009$corr_emg_ratio <- 1 + Urry2009$V1
+# 
+# pdf("Fig_EMG_ER3.pdf", width = 7, height = 5)
+# plot(Urry2009$corr_emg_ratio ~ Urry2009$time, type = "l", frame.plot= F, lwd = 2, main = "Upregulate negative", xlab = "time (s)", ylab = "EMG (ratio)", col = col5)
+# abline(v = c(0, 2, 3), lty = 3)
+# lines(lowess(x = MeanTimecourses$time_s, y = MeanTimecourses$up_neg, f= 0.05), col = col4, lwd = 2)
+# legend("bottomright", lty = 1, lwd = 2, col = c(col5, col4), legend = c("Urry2009", "Nilsonne2015"), bty = "n")
+# dev.off()
 
 
 # Prepare data for statistical modelling
@@ -99,7 +99,7 @@ plot(c(eff1$fit[1], eff1$fit[2]),
      xlim = c(1, 2.1),
      ylim = c(-0.1, 0.3),
      col = col1,
-     main = "Corrugator EMG, neutral stimuli",
+     main = "Corrugator EMG, neutral stimuli"
 )
 lines(c(1, 1), c(eff1$upper[1], eff1$lower[1]), col = col1)
 lines(c(2, 2), c(eff1$upper[2], eff1$lower[2]), col = col1)
@@ -122,7 +122,7 @@ plot(c(eff1$fit[3], eff1$fit[4]),
      xlim = c(1, 2.1),
      ylim = c(-0.1, 0.3),
      col = col1,
-     main = "Corrugator EMG, negative stimuli",
+     main = "Corrugator EMG, negative stimuli"
 )
 lines(c(1, 1), c(eff1$upper[3], eff1$lower[3]), col = col1)
 lines(c(2, 2), c(eff1$upper[4], eff1$lower[4]), col = col1)
@@ -245,7 +245,7 @@ data_corr_valence <- rbind(data_corr_valence, data.frame(scale = "IRI-PT", beta 
 data_corr_valence <- rbind(data_corr_valence, data.frame(scale = "IRI-EC", beta = intervals(lme1d)$fixed[7, 2], lower = intervals(lme1d)$fixed[7, 1], upper = intervals(lme1d)$fixed[7, 3], group = "IRI", p = round(summary(lme1d)$tTable[7, 5], 3)))
 data_corr_valence <- data_corr_valence[c(9:1), ] # Reverse order
 
-pdf("Fig_EMG5.pdf", width = 7, height = 5)
+pdf("Fig_EMG_ER8.pdf", width = 7, height = 5)
 par(mar=c(5.1, 5.4, 4, 14))
 plot(x = data_corr_valence$beta, y = c(12:9, 7, 5, 3:1), xlab = expression(beta), ylab = "", frame.plot = F, xlim = c(min(data_corr_valence$lower), max(data_corr_valence$upper)), xaxt = "n", yaxt = "n")
 title("Corrugator EMG, interaction with stimulus valence", line = 2)
@@ -276,7 +276,7 @@ data_corr_instruction <- rbind(data_corr_instruction, data.frame(scale = "IRI-PT
 data_corr_instruction <- rbind(data_corr_instruction, data.frame(scale = "IRI-EC", beta = intervals(lme1d)$fixed[6, 2], lower = intervals(lme1d)$fixed[6, 1], upper = intervals(lme1d)$fixed[6, 3], group = "IRI", p = round(summary(lme1d)$tTable[6, 5], 3)))
 data_corr_instruction <- data_corr_instruction[c(9:1), ] # Reverse order
 
-pdf("Fig_EMG5.pdf", width = 7, height = 5)
+pdf("Fig_EMG_ER9.pdf", width = 7, height = 5)
 par(mar=c(5.1, 5.4, 4, 14))
 plot(x = data_corr_instruction$beta, y = c(12:9, 7, 5, 3:1), xlab = expression(beta), ylab = "", frame.plot = F, xlim = c(min(data_corr_instruction$lower), max(data_corr_instruction$upper)), xaxt = "n", yaxt = "n")
 title("Corrugator EMG, interaction with instruction", line = 2)
@@ -296,8 +296,8 @@ mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_corr_instruction$p, line = 
 dev.off()
 
 # Write regression output tables
-write.csv(summary(lme1b)$tTable, file = "Corr_unadjusted.csv")
-write.csv(summary(lme1)$tTable, file = "Corr_IRI_EC.csv")
+write.csv(summary(lme1)$tTable, file = "Corr_main.csv")
+write.csv(summary(lme1d)$tTable, file = "Corr_IRI_EC.csv")
 write.csv(summary(lme2)$tTable, file = "Corr_IRI_PT.csv")
 write.csv(summary(lme3)$tTable, file = "Corr_IRI_PD.csv")
 write.csv(summary(lme4)$tTable, file = "Corr_IRI_F.csv")
@@ -307,12 +307,12 @@ write.csv(summary(lme7)$tTable, file = "Corr_PPI_R_SCI.csv")
 write.csv(summary(lme8)$tTable, file = "Corr_PPI_R_FD.csv")
 write.csv(summary(lme9)$tTable, file = "Corr_PPI_R_C.csv")
 
-# Calculate a response index for each participant and write
-Corr_agg <- aggregate(CorrugatorEventData[, c("EMG_corr_mean", "Subject", "Stimulus")], list(Subject = CorrugatorEventData$Subject, Stimulus = CorrugatorEventData$Stimulus), FUN = "mean")
-Zyg_agg <- aggregate(ZygomaticEventData[, c("EMG_zyg_mean", "Subject", "Stimulus")], list(Subject = ZygomaticEventData$Subject, Stimulus = ZygomaticEventData$Stimulus), FUN = "mean")
-IndividualResponses <- data.frame(Subject = Corr_agg$Subject[Corr_agg$Stimulus == "Angry"], 
-                                  CorrAngry = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Angry"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
-                                  CorrHappy = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Happy"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
-                                  ZygAngry = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Angry"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"],
-                                  ZygHappy = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Happy"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"])
-write.csv(IndividualResponses, file = "IndividualResponsesFMOV.csv", row.names = FALSE)
+# # Calculate a response index for each participant and write
+# Corr_agg <- aggregate(CorrugatorEventData[, c("EMG_corr_mean", "Subject", "Stimulus")], list(Subject = CorrugatorEventData$Subject, Stimulus = CorrugatorEventData$Stimulus), FUN = "mean")
+# Zyg_agg <- aggregate(ZygomaticEventData[, c("EMG_zyg_mean", "Subject", "Stimulus")], list(Subject = ZygomaticEventData$Subject, Stimulus = ZygomaticEventData$Stimulus), FUN = "mean")
+# IndividualResponses <- data.frame(Subject = Corr_agg$Subject[Corr_agg$Stimulus == "Angry"], 
+#                                   CorrAngry = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Angry"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
+#                                   CorrHappy = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Happy"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
+#                                   ZygAngry = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Angry"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"],
+#                                   ZygHappy = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Happy"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"])
+# write.csv(IndividualResponses, file = "IndividualResponsesFMOV.csv", row.names = FALSE)
