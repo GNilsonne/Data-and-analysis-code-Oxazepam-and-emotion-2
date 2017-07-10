@@ -242,9 +242,9 @@ arrows(data_corr_valence$lower, c(12:9, 7, 5, 3:1), data_corr_valence$upper, c(1
 par(las=1)
 mtext(side = 2, at = c(12:9, 7, 5, 3:1), text = c("IRI-EC", " IRI-PT", "IRI-PD", "IRI-F", "STAI-T", "TAS-20", "PPI-R-SCI", "PPI-R-FD", "PPI-R-C"), line = 1)
 mtext(side = 4, at = 13, text = expression(beta), line = 1)
-mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_corr_valence$beta, 2), line = 1)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_corr_valence$beta, 3), line = 1)
 mtext(side = 4, at = 13, text = "95 % CI", line = 4)
-CI <- paste("[", round(data_corr_valence$lower, 2), ", ", round(data_corr_valence$upper, 2), "]", sep = "")
+CI <- paste("[", round(data_corr_valence$lower, 3), ", ", round(data_corr_valence$upper, 3), "]", sep = "")
 mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = CI, line = 4)
 mtext(side = 4, at = 13, text = expression(italic(p)), line = 10)
 mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_corr_valence$p, line = 10)
@@ -273,46 +273,46 @@ arrows(data_corr_instruction$lower, c(12:9, 7, 5, 3:1), data_corr_instruction$up
 par(las=1)
 mtext(side = 2, at = c(12:9, 7, 5, 3:1), text = c("IRI-EC", " IRI-PT", "IRI-PD", "IRI-F", "STAI-T", "TAS-20", "PPI-R-SCI", "PPI-R-FD", "PPI-R-C"), line = 1)
 mtext(side = 4, at = 13, text = expression(beta), line = 1)
-mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_corr_instruction$beta, 2), line = 1)
+mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = round(data_corr_instruction$beta, 3), line = 1)
 mtext(side = 4, at = 13, text = "95 % CI", line = 4)
-CI <- paste("[", round(data_corr_instruction$lower, 2), ", ", round(data_corr_instruction$upper, 2), "]", sep = "")
+CI <- paste("[", round(data_corr_instruction$lower, 3), ", ", round(data_corr_instruction$upper, 3), "]", sep = "")
 mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = CI, line = 4)
 mtext(side = 4, at = 13, text = expression(italic(p)), line = 10)
 mtext(side = 4, at = c(12:9, 7, 5, 3:1), text = data_corr_instruction$p, line = 10)
 dev.off()
 
 # Write regression output tables
-write.csv(summary(lme1d)$tTable, file = "Corr_unadjusted.csv")
-write.csv(summary(lme1)$tTable, file = "Corr_IRI_EC.csv")
-write.csv(summary(lme2)$tTable, file = "Corr_IRI_PT.csv")
-write.csv(summary(lme3)$tTable, file = "Corr_IRI_PD.csv")
-write.csv(summary(lme4)$tTable, file = "Corr_IRI_F.csv")
-write.csv(summary(lme5)$tTable, file = "Corr_STAI_T.csv")
-write.csv(summary(lme6)$tTable, file = "Corr_TAS_20.csv")
-write.csv(summary(lme7)$tTable, file = "Corr_PPI_R_SCI.csv")
-write.csv(summary(lme8)$tTable, file = "Corr_PPI_R_FD.csv")
-write.csv(summary(lme9)$tTable, file = "Corr_PPI_R_C.csv")
+write.csv(summary(lme1)$tTable, file = "HR_main.csv")
+write.csv(summary(lme1d)$tTable, file = "HR_IRI_EC.csv")
+write.csv(summary(lme2)$tTable, file = "HR_IRI_PT.csv")
+write.csv(summary(lme3)$tTable, file = "HR_IRI_PD.csv")
+write.csv(summary(lme4)$tTable, file = "HR_IRI_F.csv")
+write.csv(summary(lme5)$tTable, file = "HR_STAI_T.csv")
+write.csv(summary(lme6)$tTable, file = "HR_TAS_20.csv")
+write.csv(summary(lme7)$tTable, file = "HR_PPI_R_SCI.csv")
+write.csv(summary(lme8)$tTable, file = "HR_PPI_R_FD.csv")
+write.csv(summary(lme9)$tTable, file = "HR_PPI_R_C.csv")
 
-# Calculate a response index for each participant and write
-Corr_agg <- aggregate(CorrugatorEventData[, c("EMG_corr_mean", "Subject", "Stimulus")], list(Subject = CorrugatorEventData$Subject, Stimulus = CorrugatorEventData$Stimulus), FUN = "mean")
-Zyg_agg <- aggregate(ZygomaticEventData[, c("EMG_zyg_mean", "Subject", "Stimulus")], list(Subject = ZygomaticEventData$Subject, Stimulus = ZygomaticEventData$Stimulus), FUN = "mean")
-IndividualResponses <- data.frame(Subject = Corr_agg$Subject[Corr_agg$Stimulus == "Angry"], 
-                                  CorrAngry = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Angry"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
-                                  CorrHappy = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Happy"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
-                                  ZygAngry = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Angry"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"],
-                                  ZygHappy = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Happy"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"])
-write.csv(IndividualResponses, file = "IndividualResponsesFMOV.csv", row.names = FALSE)
-
-
-
-# Compare to previously published data
-Urry_2009_HR <- read.table("C:/Users/Gustav Nilsonne/Desktop/Urry_2009_HR.csv", sep=";", quote="\"")
-plot(V2 ~ V1, data = Urry_2009_HR, type = "l", xlab = "time (s)", ylab = "Heart rate change, bpm", frame.plot = F, lwd = 2, col = col5, xlim = c(-2, 8), ylim = c(-5, 1), main = "Upregulate negative")
-abline(v = c(0, 2, 3, 5), lty = 3)
-lines(lowess(x = mean_timecourses_hr$time, y = mean_timecourses_hr$up_neg_rel, f = 0.2), col = col4, lwd = 2)
-legend("topright", lty = 1, lwd = 2, col = c(col5, col4), legend = c("Urry2009", "Nilsonne2015"), bty = "n")
-
-plot(V3 ~ V1, data = Urry_2009_HR, type = "l", xlab = "time (s)", ylab = "Heart rate change, bpm", frame.plot = F, lwd = 2, col = col5, xlim = c(-2, 8), ylim = c(-5, 1), main = "Downregulate negative")
-abline(v = c(0, 2, 3, 5), lty = 3)
-lines(lowess(x = mean_timecourses_hr$time, y = mean_timecourses_hr$down_neg_rel, f = 0.2), col = col3, lwd = 2)
-legend("topright", lty = 1, lwd = 2, col = c(col5, col3), legend = c("Urry2009", "Nilsonne2015"), bty = "n")
+# # Calculate a response index for each participant and write
+# Corr_agg <- aggregate(CorrugatorEventData[, c("EMG_corr_mean", "Subject", "Stimulus")], list(Subject = CorrugatorEventData$Subject, Stimulus = CorrugatorEventData$Stimulus), FUN = "mean")
+# Zyg_agg <- aggregate(ZygomaticEventData[, c("EMG_zyg_mean", "Subject", "Stimulus")], list(Subject = ZygomaticEventData$Subject, Stimulus = ZygomaticEventData$Stimulus), FUN = "mean")
+# IndividualResponses <- data.frame(Subject = Corr_agg$Subject[Corr_agg$Stimulus == "Angry"], 
+#                                   CorrAngry = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Angry"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
+#                                   CorrHappy = Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Happy"] - Corr_agg$EMG_corr_mean[Corr_agg$Stimulus == "Neutral"],
+#                                   ZygAngry = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Angry"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"],
+#                                   ZygHappy = Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Happy"] - Zyg_agg$EMG_zyg_mean[Zyg_agg$Stimulus == "Neutral"])
+# write.csv(IndividualResponses, file = "IndividualResponsesFMOV.csv", row.names = FALSE)
+# 
+# 
+# 
+# # Compare to previously published data
+# Urry_2009_HR <- read.table("C:/Users/Gustav Nilsonne/Desktop/Urry_2009_HR.csv", sep=";", quote="\"")
+# plot(V2 ~ V1, data = Urry_2009_HR, type = "l", xlab = "time (s)", ylab = "Heart rate change, bpm", frame.plot = F, lwd = 2, col = col5, xlim = c(-2, 8), ylim = c(-5, 1), main = "Upregulate negative")
+# abline(v = c(0, 2, 3, 5), lty = 3)
+# lines(lowess(x = mean_timecourses_hr$time, y = mean_timecourses_hr$up_neg_rel, f = 0.2), col = col4, lwd = 2)
+# legend("topright", lty = 1, lwd = 2, col = c(col5, col4), legend = c("Urry2009", "Nilsonne2015"), bty = "n")
+# 
+# plot(V3 ~ V1, data = Urry_2009_HR, type = "l", xlab = "time (s)", ylab = "Heart rate change, bpm", frame.plot = F, lwd = 2, col = col5, xlim = c(-2, 8), ylim = c(-5, 1), main = "Downregulate negative")
+# abline(v = c(0, 2, 3, 5), lty = 3)
+# lines(lowess(x = mean_timecourses_hr$time, y = mean_timecourses_hr$down_neg_rel, f = 0.2), col = col3, lwd = 2)
+# legend("topright", lty = 1, lwd = 2, col = c(col5, col3), legend = c("Urry2009", "Nilsonne2015"), bty = "n")
