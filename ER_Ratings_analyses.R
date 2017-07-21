@@ -47,18 +47,18 @@ intervals(lme1)
 
 eff1 <- effect("instruction*valence*Treatment", lme1)
 
-pdf("Fig_Ratings_ER1.pdf", width = 7, height = 5)
+pdf("Fig_Ratings_ER1.pdf", width = 5, height = 5)
 plot(c(eff1$fit[1], eff1$fit[2]),
      type = "b",
      frame.plot = F,
      ylab = "VAS rating",
-     xlab = "Instruction",
+     xlab = "Reappraisal instruction",
      xaxt = "n",
      yaxt = "n",
      xlim = c(1, 2.1),
      ylim = c(0, 60),
      col = col1,
-     main = "Rated unpleasantness, neutral stimuli"
+     main = "Unpleasantness ratings, Neutral-valence stimuli"
 )
 lines(c(1, 1), c(eff1$upper[1], eff1$lower[1]), col = col1)
 lines(c(2, 2), c(eff1$upper[2], eff1$lower[2]), col = col1)
@@ -70,18 +70,18 @@ axis(2, at = c(0, 20, 40, 60))
 legend("topleft", col = c(col1, col2), pch = c(1, 16), legend = c("Placebo", "Oxazepam"), bty = "n", lty = 1)
 dev.off()
 
-pdf("Fig_Ratings_ER2.pdf", width = 7, height = 5)
+pdf("Fig_Ratings_ER2.pdf", width = 5, height = 5)
 plot(c(eff1$fit[3], eff1$fit[4]),
      type = "b",
      frame.plot = F,
      ylab = "VAS rating",
-     xlab = "Instruction",
+     xlab = "Reappraisal instruction",
      xaxt = "n",
      yaxt = "n",
      xlim = c(1, 2.1),
      ylim = c(0, 60),
      col = col1,
-     main = "Rated unpleasantness, negative stimuli"
+     main = "Unpleasantness ratings, Negative-valence stimuli"
 )
 lines(c(1, 1), c(eff1$upper[3], eff1$lower[3]), col = col1)
 lines(c(2, 2), c(eff1$upper[4], eff1$lower[4]), col = col1)
@@ -90,7 +90,7 @@ lines(c(1.1, 1.1), c(eff1$upper[7], eff1$lower[7]), col = col2)
 lines(c(2.1, 2.1), c(eff1$upper[8], eff1$lower[8]), col = col2)
 axis(1, at = c(1.05, 2.05), labels = c("Downregulate", "Upregulate"))
 axis(2, at = c(0, 20, 40, 60))
-legend("topleft", col = c(col1, col2), pch = c(1, 16), legend = c("Placebo", "Oxazepam"), bty = "n", lty = 1)
+#legend("topleft", col = c(col1, col2), pch = c(1, 16), legend = c("Placebo", "Oxazepam"), bty = "n", lty = 1)
 dev.off()
 
 # Compare plots to less custom-generated output for verification

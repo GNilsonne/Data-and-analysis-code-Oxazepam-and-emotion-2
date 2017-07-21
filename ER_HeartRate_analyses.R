@@ -33,7 +33,7 @@ hr_event_data <- read.csv("HeartRateEventData_ER.csv")
 # Corrugator activity
 # Make figures
 pdf("Fig_HR_ER1.pdf", width = 5, height = 5)
-plot(mean_timecourses_hr$down_neg ~ mean_timecourses_hr$time_s, type = "n", frame.plot = F, main = "Heart rate, Neutral stimuli", xlab = "Time (s)", ylab = "Heart rate (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.94, 1.02))
+plot(mean_timecourses_hr$down_neg ~ mean_timecourses_hr$time_s, type = "n", frame.plot = F, main = "Heart rate, Neutral-valence stimuli", xlab = "Time (s)", ylab = "Heart rate (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.94, 1.02))
 rect(4, 0.000001, 6, 10, col = "gray88", border = NA)
 abline(v = c(0, 2, 3, 5), lty = 3)
 axis(1)
@@ -44,14 +44,14 @@ legend("topright", lty = c(1, 5), col = c(col3, col4), legend = c("Downregulate"
 dev.off()
 
 pdf("Fig_HR_ER2.pdf", width = 5, height = 5)
-plot(mean_timecourses_hr$down_neg ~ mean_timecourses_hr$time_s, type = "n", frame.plot = F, main = "Heart rate, Negative stimuli", xlab = "Time (s)", ylab = "Heart rate (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.94, 1.02))
+plot(mean_timecourses_hr$down_neg ~ mean_timecourses_hr$time_s, type = "n", frame.plot = F, main = "Heart rate, Negative-valence stimuli", xlab = "Time (s)", ylab = "Heart rate (ratio)", xaxt = "n", yaxt = "n", ylim = c(0.94, 1.02))
 rect(4, 0.000001, 6, 10, col = "gray88", border = NA)
 abline(v = c(0, 2, 3, 5), lty = 3)
 axis(1)
 axis(2, at = c(0.94, 0.96, 0.98, 1, 1.02))
 lines(lowess(x = mean_timecourses_hr$time_s, y = mean_timecourses_hr$down_neg, f = 0.2), col = col3, lwd = 2)
 lines(lowess(x = mean_timecourses_hr$time_s, y = mean_timecourses_hr$up_neg, f= 0.2), col = col4, lwd = 2, lty = 5)
-legend("topright", lty = c(1, 5), col = c(col3, col4), legend = c("Downregulate", "Upregulate"), lwd = 2, bg = "white")
+#legend("topright", lty = c(1, 5), col = c(col3, col4), legend = c("Downregulate", "Upregulate"), lwd = 2, bg = "white")
 dev.off()
 
 # Prepare data for statistical modelling
@@ -78,13 +78,13 @@ plot(c(eff1$fit[1], eff1$fit[2]),
      type = "b",
      frame.plot = F,
      ylab = "Heart rate (sqrt ratio)",
-     xlab = "Instruction",
+     xlab = "Reappraisal instruction",
      xaxt = "n",
      yaxt = "n",
      xlim = c(1, 2.1),
      ylim = c(0.955, 1),
      col = col1,
-     main = "Heart rate, neutral stimuli",
+     main = "Heart rate, Neutral-valence stimuli"
 )
 lines(c(1, 1), c(eff1$upper[1], eff1$lower[1]), col = col1)
 lines(c(2, 2), c(eff1$upper[2], eff1$lower[2]), col = col1)
@@ -101,13 +101,13 @@ plot(c(eff1$fit[3], eff1$fit[4]),
      type = "b",
      frame.plot = F,
      ylab = "Heart rate (sqrt ratio)",
-     xlab = "Instruction",
+     xlab = "Reappraisal instruction",
      xaxt = "n",
      yaxt = "n",
      xlim = c(1, 2.1),
      ylim = c(0.955, 1),
      col = col1,
-     main = "Heart rate, negative stimuli",
+     main = "Heart rate, Negative-valence stimuli"
 )
 lines(c(1, 1), c(eff1$upper[3], eff1$lower[3]), col = col1)
 lines(c(2, 2), c(eff1$upper[4], eff1$lower[4]), col = col1)
